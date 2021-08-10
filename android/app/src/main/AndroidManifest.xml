@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.cliente">
+    package="com.mbasuscriber.clientapp">
    <application
         android:label="cliente"
         android:icon="@mipmap/ic_launcher">

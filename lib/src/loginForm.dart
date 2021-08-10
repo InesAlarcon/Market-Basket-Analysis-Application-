@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cliente/src/registrarForm.dart';
+// import 'package:firebase_core/firebase_core.dart';
+
 
 class LoginForm extends StatefulWidget {
   LoginForm({Key? key,required this.title}) : super(key: key);

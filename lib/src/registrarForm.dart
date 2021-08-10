@@ -1,6 +1,8 @@
+import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/loginForm.dart';
 import 'package:google_fonts/google_fonts.dart';
+// import 'package:firebase_core/firebase_core.dart';
 
 
 class RegistrarForm extends StatefulWidget{
@@ -13,6 +15,19 @@ class RegistrarForm extends StatefulWidget{
 }
 
 class RegistrarFormState extends State<RegistrarForm>{
+
+  final AuthServices auth = AuthServices();
+  final keyForm = GlobalKey<FormState>();
+
+  final userController = TextEditingController();
+  final emailController = TextEditingController();
+  final passController = TextEditingController();
+
+  String usuario = '';
+  String email = '';
+  String pass = '';
+  String error = '';
+
 
   //Segmento: boton de regreso
   Widget regresarBoton() {
@@ -58,64 +73,182 @@ class RegistrarFormState extends State<RegistrarForm>{
   }
 
   //Segmento: text boxes y su estilo
-  Widget textBox(String title, {bool isPassword = false}) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          TextField(
-              obscureText: isPassword,
-              decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: Color(0xffd9d9d9),
-                  filled: true))
-        ],
-      ),
-    );
-  }
+  // Widget textBox(String title, {bool isPassword = false}) {
+  //   return Container(
+  //     margin: EdgeInsets.symmetric(vertical: 10),
+  //     child: Column(
+  //
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: <Widget>[
+  //         Text(
+  //           title,
+  //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+  //         ),
+  //         SizedBox(
+  //           height: 10,
+  //         ),
+  //         TextField(
+  //             controller: userController,
+  //             obscureText: isPassword,
+  //             decoration: InputDecoration(
+  //                 border: InputBorder.none,
+  //                 fillColor: Color(0xffd9d9d9),
+  //                 filled: true))
+  //       ],
+  //     ),
+  //   );
+  // }
 
   //Segmento: ingreso de datos al form de registro
+
   Widget emailPassword() {
-    return Column(
-      children: <Widget>[
-        textBox("Usuario"),
-        textBox("Email"),
-        textBox("Contraseña", isPassword: true),
-      ],
+    final height = MediaQuery.of(context).size.height;
+    return Form(
+        key: keyForm,
+        child: Column(
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    "Usuario",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+                      validator: (val) => val!.isEmpty ? 'Poner nombre de usuario' : null,
+                      onChanged: (val) {
+                        setState(() => usuario = val);
+                      },
+
+                      controller: userController,
+                      obscureText: false,
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          fillColor: Color(0xffd9d9d9),
+                          filled: true)),
+                  Text(
+                    "Email",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+
+                      validator: (val) => val!.isEmpty ? 'Poner un correo' : null,
+                      onChanged: (val) {
+                        setState(() => email = val);
+                      },
+                      controller: emailController,
+                      obscureText: false,
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          fillColor: Color(0xffd9d9d9),
+                          filled: true)),
+                  Text(
+                    "Contraseña",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+
+                      validator: (val) => val!.length < 8 ? 'La contraseña tiene que contener 8 o más caracteres' : null,
+
+                      onChanged: (val) {
+                        setState(() => pass = val);
+                      },
+                      controller: passController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          fillColor: Color(0xffd9d9d9),
+                          filled: true)),
+                  SizedBox(height: height * .10),
+                  ElevatedButton(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(5)),
+                            gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [Color(0xff6D597A), Color(0xff355070)])),
+                        child: Text(
+                          'Registrarse',
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        ),
+                      ),
+                      onPressed: () async {
+
+                        if(keyForm.currentState!.validate()){
+                          dynamic resultado = await auth.registrarUsuario(usuario, email, pass);
+                          if(resultado == null){
+                            setState(() => error = 'Utilizar un email válido');
+                          }
+
+                          print(usuario);
+                          print(email);
+                          print(pass);
+                        }
+
+                     }
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
     );
+
   }
 
   //Segmento: boton de envio del form de registro
-  Widget registrarBoton() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: EdgeInsets.symmetric(vertical: 15),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(5)),
-          gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Color(0xff6D597A), Color(0xff355070)])),
-      child: Text(
-        'Registrarse',
-        style: TextStyle(fontSize: 20, color: Colors.white),
-      ),
-    );
-  }
+  // Widget registrarBoton() {
+  //   return InkWell(
+  //       onTap: () async {
+  //         // if(keyForm.currentState.validate()){
+  //         //
+  //         // };
+  //         usuario = userController.text;
+  //         email = emailController.text;
+  //         pass = passController.text;
+  //         print(usuario);
+  //         print(email);
+  //         print(pass);
+  //       },
+  //   child: Container(
+  //     width: MediaQuery.of(context).size.width,
+  //     padding: EdgeInsets.symmetric(vertical: 15),
+  //     alignment: Alignment.center,
+  //     decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.all(Radius.circular(5)),
+  //         gradient: LinearGradient(
+  //             begin: Alignment.centerLeft,
+  //             end: Alignment.centerRight,
+  //             colors: [Color(0xff6D597A), Color(0xff355070)])),
+  //     child: Text(
+  //       'Registrarse',
+  //       style: TextStyle(fontSize: 20, color: Colors.white),
+  //     ),
+  //   ),
+  //
+  //   );
+  // }
 
   //Segmento: opcion para entrar a la pagina de login
   Widget loginFormBoton() {
     return InkWell(
-      onTap: () {
+      onTap: ()  {
         Navigator.push(
             context, MaterialPageRoute(builder: (context) => LoginForm(title: '')));
       },
@@ -173,8 +306,8 @@ class RegistrarFormState extends State<RegistrarForm>{
                     SizedBox(
                       height: 20,
                     ),
-                    registrarBoton(),
-                    SizedBox(height: height * .14),
+                    // registrarBoton(),
+                    // SizedBox(height: height * .14),
                     loginFormBoton(),
                   ],
                 ),

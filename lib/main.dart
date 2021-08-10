@@ -1,9 +1,15 @@
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/loginForm.dart';
 import 'package:cliente/src/registrarForm.dart';
 import 'package:google_fonts/google_fonts.dart';
+// import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+
+
+void main() {//async {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -128,6 +134,28 @@ class MyHomePageState extends State<MyHomePage> {
     );
   }
 
+
+  // Widget testFirebase() {
+  //   return InkWell(
+  //         onTap: () => FirebaseFirestore.instance.collection('testing')
+  //             .add({'timestamp': Timestamp.fromDate(DateTime.now())}),
+  //
+  //     child: Container(
+  //       padding: EdgeInsets.symmetric(horizontal: 10),
+  //       child: Row(
+  //         children: <Widget>[
+  //           Container(
+  //             padding: EdgeInsets.only(left: 0, top: 10, bottom: 10),
+  //             child: Icon(Icons.keyboard_arrow_left, color: Colors.black),
+  //           ),
+  //           Text('Regresar',
+  //               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))
+  //         ],
+  //       ),
+  //     ),
+  //       // body: StreamBuilder(),
+  //     );
+  // }
   //construcción de la clase
   @override
   Widget build(BuildContext context) {
