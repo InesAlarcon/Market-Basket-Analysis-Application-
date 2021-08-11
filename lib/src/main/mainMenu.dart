@@ -122,56 +122,104 @@ class MainMenuState extends State<MainMenu>{
             )
         ),
       ),
-      body: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xff464646), Color(0xff7c7c7c)]),
-          image: DecorationImage(
-            image: AssetImage("assets/images/background4.png"),
-            fit: BoxFit.cover,
-          ),
-        ),
-        // child: Image.asset("assets/images/background.png"),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
+      body: Stack(
+
+        children: <Widget> [
+          Container(
+            height: MediaQuery.of(context).size.height,
+            alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xff464646), Color(0xff7c7c7c)]),
+                image: DecorationImage(
+                  image: AssetImage("assets/images/background4.png"),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          Center(
+            child: SingleChildScrollView(
+              child: Center(
                 child: Container(
-                  width: 300,
-                  height: 200,
-                  padding: EdgeInsets.symmetric(vertical: 13),
+
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    boxShadow: <BoxShadow>[
-                                    BoxShadow(
-                                        color: Colors.grey.shade800,
-                                        offset: Offset(0, 4),
-                                        blurRadius: 5,
-                                        spreadRadius: 5)
-                                  ],
-                                  // border: Border.all(color: Colors.grey, width: 2),
-                    image: DecorationImage(
-                      image: AssetImage("assets/images/background.jpg"),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Text(
-                    'OFERTAS',
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+
+                    children: <Widget>[
+                      SizedBox(
+                        child: Container(
+                          width: 300,
+                          height: 200,
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                  color: Colors.grey.shade800,
+                                  offset: Offset(0, 4),
+                                  blurRadius: 5,
+                                  spreadRadius: 5)
+                            ],
+                            // border: Border.all(color: Colors.grey, width: 2),
+                            image: DecorationImage(
+                              image: AssetImage("assets/images/background.jpg"),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Text(
+                            'OFERTAS',
+                            style: TextStyle(fontSize: 20, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        child: Container(
+                          width: 300,
+                          height: 200,
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                  color: Colors.grey.shade800,
+                                  offset: Offset(0, 4),
+                                  blurRadius: 5,
+                                  spreadRadius: 5)
+                            ],
+                            // border: Border.all(color: Colors.grey, width: 2),
+                            image: DecorationImage(
+                              image: AssetImage("assets/images/background.jpg"),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: Text(
+                            'OFERTAS',
+                            style: TextStyle(fontSize: 20, color: Colors.white),
+                          ),
+                        ),
+                      ),
+
+                    ],
                   ),
                 ),
               ),
 
-            ],
-        ),
-      ),
+            ),
+          ),
 
-    );
+          ],
+          // child: Image.asset("assets/images/background.png"),
+
+        ),
+
+      );
+
 
 
 
