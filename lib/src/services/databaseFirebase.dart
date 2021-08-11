@@ -11,6 +11,23 @@ class AuthServices{
 
   }
 
+  //verificar si el usuario se puede login
+  Future loginUsuario(String usuario, String email, String pass) async {
+    try{
+      AuthResult authUser = await auth.signInWithEmailAndPassword( email: email, password: pass);
+      FirebaseUser user = authUser.user;
+      return firebaseUser(user);
+
+    }catch(e){
+      print(e.toString());
+      return null;
+    }
+
+  }
+
+
+
+  //registro de usuarios
   Future registrarUsuario(String usuario, String email, String pass) async {
     try{
       AuthResult authUser = await auth.createUserWithEmailAndPassword( email: email, password: pass);

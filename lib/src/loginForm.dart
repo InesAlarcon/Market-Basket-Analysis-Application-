@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cliente/src/registrarForm.dart';
+import 'package:cliente/src/services/databaseFirebase.dart';
+import 'package:cliente/src/main/mainMenu.dart';
+
 // import 'package:firebase_core/firebase_core.dart';
 
 
@@ -14,6 +17,14 @@ class LoginForm extends StatefulWidget {
 }
 
 class LoginFormState extends State<LoginForm>{
+  final AuthServices auth = AuthServices();
+  final keyForm = GlobalKey<FormState>();
+
+  String usuario = '';
+  String email = '';
+  String pass = '';
+  String error = '';
+
 
   //boton que regresa al menu principal
   Widget regresarBoton() {
@@ -59,57 +70,119 @@ class LoginFormState extends State<LoginForm>{
   }
 
   //Segmento: text boxes y su estilo
-  Widget textBox(String title, {bool isPassword = false}) {
-    return Container(
+  Widget emailPassword() {
+    final height = MediaQuery.of(context).size.height;
+    return Form(
+    key: keyForm,
+    child: Container(
       margin: EdgeInsets.symmetric(vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            title,
+            "Email",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           SizedBox(
             height: 10,
           ),
-          TextField(
-              obscureText: isPassword,
+          TextFormField(
+
+              validator: (val) => val!.isEmpty ? 'Poner un correo' : null,
+              onChanged: (val) {
+                setState(() => email = val);
+              },
+              obscureText: false,
               decoration: InputDecoration(
                   border: InputBorder.none,
                   fillColor: Color(0xffd9d9d9),
-                  filled: true))
+                  filled: true)),
+          Text(
+            "Contraseña",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          TextFormField(
+
+              validator: (val) => val!.length < 8 ? 'La contraseña tiene que contener 8 o más caracteres' : null,
+
+              onChanged: (val) {
+                setState(() => pass = val);
+              },
+              obscureText: true,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  fillColor: Color(0xffd9d9d9),
+                  filled: true)),
         ],
       ),
+    ),
     );
   }
 
   //Segmento: ingreso de datos al form
-  Widget emailPassword() {
-    return Column(
-      children: <Widget>[
-        textBox("Email"),
-        textBox("Contraseña", isPassword: true),
-      ],
-    );
-  }
+  // Widget emailPassword() {
+  //   return Column(
+  //     children: <Widget>[
+  //       textBox("Email"),
+  //       textBox("Contraseña", isPassword: true),
+  //     ],
+  //   );
+  // }
 
   //Segmento: boton que hace el login y manda el form a verificar contra la firebase
+
+
   Widget LoginVerBoton() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: EdgeInsets.symmetric(vertical: 15),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(5)),
-          gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Color(0xff6D597A), Color(0xff355070)])),
-      child: Text(
-        'Login',
-        style: TextStyle(fontSize: 20, color: Colors.white),
+    return Column(
+      children: <Widget>[
+        ElevatedButton(
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          padding: EdgeInsets.symmetric(vertical: 15),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+              gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xff6D597A), Color(0xff355070)])),
+          child: Column(
+            children: <Widget>[
+              Text(
+                'Login',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+
+       onPressed: () async {
+        if(keyForm.currentState!.validate()){
+          print('datos validos');
+
+          dynamic resultado = await auth.loginUsuario(usuario, email, pass);
+
+          if(resultado == null){
+            setState(() => error = 'No se pudo hacer login con la información suministrada');
+          } else{
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => MainMenu(title: '')));
+          }
+
+          print(usuario);
+          print(email);
+          print(pass);
+          }
+        },
       ),
+        SizedBox(height: 12),
+        Text(error, style: TextStyle(color: Colors.red, fontSize: 14)),
+    ]
     );
+
   }
 
   //Segmento: division para otros metodos de login
@@ -287,7 +360,8 @@ class LoginFormState extends State<LoginForm>{
               Positioned(top: 40, left: 0, child: regresarBoton()),
             ],
           ),
-        ));
+        ),
+    );
   }
 
 }
