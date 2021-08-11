@@ -125,8 +125,12 @@ class MainMenuState extends State<MainMenu>{
       body: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xff464646), Color(0xff7c7c7c)]),
           image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
+            image: AssetImage("assets/images/background4.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -142,8 +146,15 @@ class MainMenuState extends State<MainMenu>{
                   padding: EdgeInsets.symmetric(vertical: 13),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(5)),
-                    // border: Border.all(color: Colors.white, width: 2),
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                        color: Colors.grey.shade800,
+                                        offset: Offset(0, 4),
+                                        blurRadius: 5,
+                                        spreadRadius: 5)
+                                  ],
+                                  // border: Border.all(color: Colors.grey, width: 2),
                     image: DecorationImage(
                       image: AssetImage("assets/images/background.jpg"),
                       fit: BoxFit.cover,

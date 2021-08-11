@@ -139,7 +139,6 @@ class RegistrarFormState extends State<RegistrarForm>{
                     height: 10,
                   ),
                   TextFormField(
-
                       validator: (val) => val!.isEmpty ? 'Poner un correo' : null,
                       onChanged: (val) {
                         setState(() => email = val);
@@ -193,7 +192,10 @@ class RegistrarFormState extends State<RegistrarForm>{
                           dynamic resultado = await auth.registrarUsuario(usuario, email, pass);
                           if(resultado == null){
                             setState(() => error = 'Utilizar un email válido');
-                          }
+                          }else{
+                            Navigator.push(
+                                context, MaterialPageRoute(builder: (context) => LoginForm(title: '')));
+                          };
 
                           print(usuario);
                           print(email);
