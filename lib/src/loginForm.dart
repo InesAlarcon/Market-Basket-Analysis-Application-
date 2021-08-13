@@ -220,52 +220,52 @@ class LoginFormState extends State<LoginForm>{
   }
 
   //Segmento: boton que permite login de gmail
-  Widget gmailLoginBoton() {
-    return Container(
-      height: 50,
-      margin: EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xffdfeaf0),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(5),
-                    topLeft: Radius.circular(5)),
-              ),
-              alignment: Alignment.center,
-
-              //porque chingados no funcionas
-              child: Image.asset('assets/images/gmail.png'),
-
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xffdfeaf0),
-                borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(5),
-                    topRight: Radius.circular(5)),
-              ),
-              alignment: Alignment.center,
-              child: Text('Login con Gmail',
-                  style: TextStyle(
-                      color: Color(0xff454a4d),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget gmailLoginBoton() {
+  //   return Container(
+  //     height: 50,
+  //     margin: EdgeInsets.symmetric(vertical: 20),
+  //     decoration: BoxDecoration(
+  //       borderRadius: BorderRadius.all(Radius.circular(10)),
+  //     ),
+  //     child: Row(
+  //       children: <Widget>[
+  //         Expanded(
+  //           flex: 1,
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Color(0xffdfeaf0),
+  //               borderRadius: BorderRadius.only(
+  //                   bottomLeft: Radius.circular(5),
+  //                   topLeft: Radius.circular(5)),
+  //             ),
+  //             alignment: Alignment.center,
+  //
+  //             //porque chingados no funcionas
+  //             child: Image.asset('assets/images/gmail.png'),
+  //
+  //           ),
+  //         ),
+  //         Expanded(
+  //           flex: 5,
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Color(0xffdfeaf0),
+  //               borderRadius: BorderRadius.only(
+  //                   bottomRight: Radius.circular(5),
+  //                   topRight: Radius.circular(5)),
+  //             ),
+  //             alignment: Alignment.center,
+  //             child: Text('Login con Gmail',
+  //                 style: TextStyle(
+  //                     color: Color(0xff454a4d),
+  //                     fontSize: 18,
+  //                     fontWeight: FontWeight.w400)),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Segmento: crear cuenta
   Widget crearCuenta() {
@@ -350,7 +350,7 @@ class LoginFormState extends State<LoginForm>{
                                 fontSize: 14, fontWeight: FontWeight.w500)),
                       ),
                       division(),
-                      gmailLoginBoton(),
+                      // gmailLoginBoton(),
                       SizedBox(height: height * .055),
                       crearCuenta(),
                     ],
