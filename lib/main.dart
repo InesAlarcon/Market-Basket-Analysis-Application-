@@ -1,8 +1,13 @@
+// @dart=2.9
+
 // import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/loginForm.dart';
 import 'package:cliente/src/registrarForm.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:cliente/src/user.dart';
 // import 'package:firebase_core/firebase_core.dart';
 
 
@@ -18,30 +23,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return MaterialApp(
-      title: 'OfferPlus Clientes',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
 
-        primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.oswaldTextTheme(textTheme).copyWith(bodyText1: GoogleFonts.montserrat(textStyle: textTheme.bodyText1)),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: MyHomePage(title: ''),
+    return StreamProvider<User>.value(
+        initialData: null,
+        value: AuthServices().user,
+
+        child: MaterialApp(
+          title: 'OfferPlus Clientes',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            textTheme: GoogleFonts.oswaldTextTheme(textTheme).copyWith(bodyText1: GoogleFonts.montserrat(textStyle: textTheme.bodyText1)),
+          ),
+          debugShowCheckedModeBanner: false,
+          home: MyHomePage(title: ''),
+        )
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+  MyHomePage({Key key, this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -60,6 +61,7 @@ class MyHomePage extends StatefulWidget {
 
 //Scheme de colores: https://coolors.co/05668d-028090-00a896-02c39a-f0f3bd
 class MyHomePageState extends State<MyHomePage> {
+
 
   //Segmento: titulo de la pagina
   Widget titulo() {
@@ -159,6 +161,8 @@ class MyHomePageState extends State<MyHomePage> {
   //construcción de la clase
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<User>(context);
+    print(user);
     return Scaffold(
       body:SingleChildScrollView(
         child:Container(

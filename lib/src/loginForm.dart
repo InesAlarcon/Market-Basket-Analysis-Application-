@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cliente/src/registrarForm.dart';
@@ -164,12 +165,13 @@ class LoginFormState extends State<LoginForm>{
           print('datos validos');
 
           dynamic resultado = await auth.loginUsuario(usuario, email, pass);
-
+          // FirebaseUser uidAuth = resultado;
+          // String uid = uidAuth.uid;
           if(resultado == null){
             setState(() => error = 'No se pudo hacer login con la información suministrada');
           } else{
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => MainMenu(title: '')));
+                context, MaterialPageRoute(builder: (context) => MainMenu(title: '', /*uid: uid*/)));
           }
 
           print(usuario);

@@ -1,11 +1,13 @@
-
+import 'package:cliente/src/services/databaseFirebase.dart';
+import 'package:cliente/src/main/gustos/gustosUsuario.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
 class MainMenu extends StatefulWidget {
-MainMenu({Key? key,required this.title}) : super(key: key);
+MainMenu({Key? key,required this.title, /*required this.uid*/}) : super(key: key);
 
+// final String uid;
 final String title;
 
 @override
@@ -14,6 +16,7 @@ MainMenuState createState() => MainMenuState();
 
 class MainMenuState extends State<MainMenu>{
 
+  String docuid='';
   final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
 
   Widget searchBar(){
@@ -36,7 +39,29 @@ class MainMenuState extends State<MainMenu>{
     );
   }
 
+  Widget background(){
+    return Container(
+      // height: MediaQuery.of(context).size.height,
+      // height: ,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xff464646), Color(0xff7c7c7c)]),
+        image: DecorationImage(
+          image: AssetImage("assets/images/background4.png"),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
 
+  // @override
+  // void initState(){
+  //   super.initState();
+  //   docuid = widget.uid;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -113,8 +138,10 @@ class MainMenuState extends State<MainMenu>{
 
                 ),
                 ListTile(
-                  title: Text('Ofertas', style: TextStyle(color: Colors.white, fontSize: 20),),
-
+                  title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '',uid: docuid,)));
+                  },
                 ),
                 ListTile(
                   title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
@@ -131,20 +158,7 @@ class MainMenuState extends State<MainMenu>{
       body: Stack(
 
         children: <Widget> [
-          Container(
-            height: MediaQuery.of(context).size.height,
-            alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xff464646), Color(0xff7c7c7c)]),
-                image: DecorationImage(
-                  image: AssetImage("assets/images/background4.png"),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+          background(),
           Center(
             child: SingleChildScrollView(
               child: Center(
@@ -174,12 +188,12 @@ class MainMenuState extends State<MainMenu>{
                             ],
                             // border: Border.all(color: Colors.grey, width: 2),
                             image: DecorationImage(
-                              image: AssetImage("assets/images/background.jpg"),
+                              image: AssetImage("assets/images/background.png"),
                               fit: BoxFit.cover,
                             ),
                           ),
                           child: Text(
-                            'GUSTOS',
+                            'OFERTAS',
                             style: TextStyle(fontSize: 20, color: Colors.white),
                           ),
                         ),
