@@ -3,29 +3,60 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
-import 'package:cliente/src/user.dart';
+import 'package:cliente/src/usuario.dart';
 import 'package:cliente/src/main/gustos/gustos.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AuthServices{
 
+
+
+
   final FirebaseAuth auth = FirebaseAuth.instance;
 
-  User firebaseUser(FirebaseUser user){
-    return user != null ? User(uid: user.uid) : null;
+  // Future<Firestore> connectFS1() async {
+  //
+  //   final FirebaseApp shared = await FirebaseApp.configure(name: 'shared-project',
+  //     options: FirebaseOptions(
+  //       apiKey: "AIzaSyBBWORx3QijzF9mOHcf6pHqBNT4mMW9hIM",
+  //       projectID: "com.mbasuscriber.clientapp",
+  //       googleAppID: "1:389302464783:android:b5fb812aff204c3d614e7a",
+  //     ),
+  //   );
+  //   print("Connection Completed");
+  //   return Firestore(app: shared);
+  // }
+
+
+  Usuario firebaseUser(User user){
+    return user != null ? Usuario(uid: user.uid) : null;
 
   }
 
-  Stream<User> get user{
+  Stream<Usuario> get user{
     // return auth.onAuthStateChanged.map((FirebaseUser user) => firebaseUser(user));
-    return auth.onAuthStateChanged.map((firebaseUser));
+
+    return auth.userChanges().map((firebaseUser));
+    // return auth.authStateChanges.map((firebaseUser));
 
   }
 
   //verificar si el usuario se puede login
   Future loginUsuario(String usuario, String email, String pass) async {
+    // Firebase.initializeApp(
+    //       name: 'clientApp',
+    //       options: const FirebaseOptions(
+    //           apiKey: 'AIzaSyBBWORx3QijzF9mOHcf6pHqBNT4mMW9hIM',
+    //           appId: '1:389302464783:android:b5fb812aff204c3d614e7a',
+    //           messagingSenderId: '389302464783',
+    //           projectId: 'clientloginauth'
+    //       )
+    //   );
     try{
-      AuthResult authUser = await auth.signInWithEmailAndPassword( email: email, password: pass);
-      FirebaseUser user = authUser.user;
+      UserCredential authUser = await auth.signInWithEmailAndPassword( email: email, password: pass);
+      User user = authUser.user;
       return firebaseUser(user);
 
     }catch(e){
@@ -39,11 +70,22 @@ class AuthServices{
 
   //registro de usuarios
   Future registrarUsuario(String usuario, String email, String pass) async {
+    // Firebase.initializeApp(
+    //     name: 'clientApp',
+    //     options: const FirebaseOptions(
+    //         apiKey: 'AIzaSyBBWORx3QijzF9mOHcf6pHqBNT4mMW9hIM',
+    //         appId: '1:389302464783:android:b5fb812aff204c3d614e7a',
+    //         messagingSenderId: '389302464783',
+    //         projectId: 'clientloginauth'
+    //     )
+    // );
     try{
-      AuthResult authUser = await auth.createUserWithEmailAndPassword( email: email, password: pass);
-      FirebaseUser user = authUser.user;
+      UserCredential authUser = await auth.createUserWithEmailAndPassword( email: email, password: pass);
+      User user = authUser.user;
       
       await DatabaseConnect(uid: user.uid).agregarGustos('sin gustos');
+      await DatabaseConnect(uid: user.uid).agregarUserInfo(usuario);
+
       return firebaseUser(user);
 
     }catch(e){
@@ -67,28 +109,112 @@ class AuthServices{
 
 class DatabaseConnect {
 
-  final String uid;
+
   DatabaseConnect({this.uid});
+  final String uid;
 
-  final CollectionReference gustosCol = Firestore.instance.collection('gustos');
 
-  Future agregarGustos(String gusto) async {
-    return await gustosCol.document(uid).setData({
-      'gusto': gusto,
+
+
+  final FirebaseApp clientApp = Firebase.app('clientApp');
+  //
+  //final CollectionReference userCol = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario');
+  //
+
+
+
+  Future agregarUserInfo(String username) async{
+
+    return FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('infoUsuario').doc('username').set({
+      'username': username,
     });
   }
 
-  List<Gustos> listaGustosSnapshot(QuerySnapshot snapshot){
-    return snapshot.documents.map((docs){
+  Future agregarGustos(String gusto) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').doc();
+    return ref.set({
+        'docID': ref.id,
+        'gusto': gusto,
+    });
+  }
+
+  Future<List> getData() async{
+    QuerySnapshot query =  await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').get();
+    final allData = query.docs.map((doc) => doc.data()).toList();
+
+    // return query.documents.map((docs) {
+    //   return Gustos(
+    //     gusto: docs.data['gusto'] ?? '',
+    //   );
+    // }).toList();
+
+    print(allData);
+    return allData;
+
+  }
+
+
+  Future<List> getUser(String usr) async{
+    QuerySnapshot query =  await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').get();
+    final allData = query.docs.map((doc) => doc).toList();
+
+    print(allData);
+    return allData;
+
+  }
+
+  void deleteDocID(String docID) async{
+      var snapshot = await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').doc(docID).delete().then((value){
+      print(docID);
+      print("Success!");
+    }
+    );
+  }
+
+  // List<>
+//
+  List<Gustos> listaGustosSnapshot(QuerySnapshot snapshot) {
+    return snapshot.docs.map((docs){
       return Gustos(
-        gusto: docs.data['gusto'] ?? '',
+        gusto: docs.data(),
       );
     }).toList();
   }
-
-
+//
+//
+//   UserData gustoUsuarioSnapshot(DocumentSnapshot snapshot){
+//     return UserData(
+//       user: uid,
+//       gustos: snapshot.data['gusto'],
+//     );
+//   }
+//
   Stream<List<Gustos>> get gustos {
-    return gustosCol.snapshots().map(listaGustosSnapshot);
-  }
+    return FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').snapshots().map(listaGustosSnapshot);
 
+      // userCol.document(uid).collection('gustos').snapshots().map(listaGustosSnapshot);
+    // return userCol.snapshots().map(listaGustosSnapshot);
+  }
+//
+//   Stream<UserData> get userData {
+//     return userCol.document(uid).snapshots().map(gustoUsuarioSnapshot);
+//   }
+//
+}
+
+
+class BusinessDatabaseConnect{
+
+
+
+  Future<List> getOfertas() async{
+    FirebaseApp businessApp = Firebase.app('businessApp');
+
+    QuerySnapshot query = await FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').get();
+    final allOfertas = query.docs.map((doc) => doc.data()).toList();
+
+    print(allOfertas);
+    return allOfertas;
+
+  }
 }

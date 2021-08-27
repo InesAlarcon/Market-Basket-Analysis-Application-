@@ -1,5 +1,8 @@
+import 'package:cliente/src/main/gustos/agregarGusto.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cliente/src/main/gustos/gustosUsuario.dart';
+import 'package:cliente/src/services/firestoreStart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -57,14 +60,149 @@ class MainMenuState extends State<MainMenu>{
     );
   }
 
-  // @override
-  // void initState(){
-  //   super.initState();
-  //   docuid = widget.uid;
-  // }
+  //menu de abajo
+  void settings(){
+    showModalBottomSheet(
+        context: context,
+        builder: (context){
+      return Container(
+        height: 200,
+        margin: new EdgeInsets.only(
+          top: 20,
+          left: 0,
+          right: 0,
+            ),
+        padding: EdgeInsets.symmetric(
+            vertical: 20,
+            horizontal: 20
+        ),
+        decoration: BoxDecoration(
+            // border: Border(
+            //   top: BorderSide(
+            //     color: Colors.white,
+            //     width: 10,
+            //   ),
+            //   left: BorderSide(
+            //       color: Colors.white,
+            //       width: 10,
+            //   ),
+            //   right: BorderSide(
+            //     color: Colors.white,
+            //     width: 10,
+            //   ),
+            // ),
+            //
+            // border: Border.all(color: Colors.white),
+            borderRadius: new BorderRadius.only(
+              topLeft: const Radius.circular(20),
+              topRight: const Radius.circular(20),
+            ),
+            color: Color(0xb000528E),
+
+        ),
+        // child: Center(
+          child: Column(
+            // crossAxisAlignment: CrossAxisAlignment.center,
+            // mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                child: Card(
+                  color: Color(0xd000528E),
+                  child: ListTile(
+                    leading: Icon(Icons.account_circle_outlined, color: Colors.white,),
+                    title: Text('Usuario', textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 20),),
+                  ),
+                ),
+
+              ),
+              Container(
+                child: Card(
+                  color: Color(0xd000528E),
+                  child: ListTile(
+                    leading: Icon(Icons.settings, color: Colors.white,),
+                    title: Text('Ajustes', textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 20),),
+
+                  ),
+                ),
+
+              ),
+            ],
+          ),
+        // ),
+      );
+    });
+  }
+
+  //drawer izquierdo
+  Widget drawerPrincipal(){
+    return Theme(data: Theme.of(context).copyWith(
+        canvasColor: Colors.blue.withOpacity(0.2),
+      ),
+
+      child: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+
+          DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xff055475), Color(0xff02C39A)],
+              ),
+            ),
+            child: Row(
+              children: <Widget>[
+                Text(
+                  'OFER',
+                  style: GoogleFonts.oswald(
+                    textStyle: Theme.of(context).textTheme.headline4,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xffecf19e),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  'PLUS',
+                  style: GoogleFonts.oswald(
+                    textStyle: Theme.of(context).textTheme.headline4,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+
+          ListTile(
+            title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
+
+          ),
+          ListTile(
+            title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '',uid: docuid,)));
+            },
+          ),
+          ListTile(
+            title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
+
+          ),
+          ListTile(
+            title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
+
+            ),
+          ],
+        )
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    FirestoreStart().connectFS2();
     // final height = MediaQuery.of(context).size.height;
     return Scaffold(
       key: scaffoldKey,
@@ -79,7 +217,7 @@ class MainMenuState extends State<MainMenu>{
               onPressed: (){},
               icon: Icon(Icons.search)),
           IconButton(
-              onPressed: (){},
+              onPressed: () => settings(),
               icon: Icon(Icons.more_horiz)
           ),
         ],
@@ -91,70 +229,8 @@ class MainMenuState extends State<MainMenu>{
         backgroundColor: Color(0xff108aa6),
             ),
 
-      //Menu drawer izquierdo
-      drawer: Theme(data: Theme.of(context).copyWith(
-        canvasColor: Colors.blue.withOpacity(0.2),
-      ),
+      drawer: drawerPrincipal(),
 
-        child: Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-
-                DrawerHeader(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xff055475), Color(0xff02C39A)],
-                      ),
-                    ),
-                child: Row(
-                  children: <Widget>[
-                  Text(
-                    'OFER',
-                    style: GoogleFonts.oswald(
-                      textStyle: Theme.of(context).textTheme.headline4,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xffecf19e),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                    Text(
-                      'PLUS',
-                      style: GoogleFonts.oswald(
-                        textStyle: Theme.of(context).textTheme.headline4,
-                        fontSize: 40,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                ),
-
-                ListTile(
-                  title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
-
-                ),
-                ListTile(
-                  title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '',uid: docuid,)));
-                  },
-                ),
-                ListTile(
-                  title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
-
-                ),
-                ListTile(
-                  title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
-
-                ),
-              ],
-            )
-        ),
-      ),
       body: Stack(
 
         children: <Widget> [
@@ -195,6 +271,14 @@ class MainMenuState extends State<MainMenu>{
                           child: Text(
                             'OFERTAS',
                             style: TextStyle(fontSize: 20, color: Colors.white),
+
+
+
+
+                          //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+
+
+
                           ),
                         ),
                       ),

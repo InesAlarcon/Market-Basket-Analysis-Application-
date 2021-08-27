@@ -6,4 +6,5 @@ class Gustos {
 
   Gustos({this.gusto});
 
+
 }

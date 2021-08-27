@@ -2,44 +2,71 @@
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
+import 'package:cliente/src/services/firestoreStart.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/loginForm.dart';
 import 'package:cliente/src/registrarForm.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:cliente/src/user.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:cliente/src/usuario.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 
-void main() {//async {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp();
+void main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+   await Firebase.initializeApp(
+       name: 'clientApp',
+       options: const FirebaseOptions(
+           apiKey: 'AIzaSyBBWORx3QijzF9mOHcf6pHqBNT4mMW9hIM',
+           appId: '1:389302464783:android:b5fb812aff204c3d614e7a',
+           messagingSenderId: '389302464783',
+           projectId: 'clientloginauth'
+       )
+   );
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Firebase.initializeApp();
+    // Firebase.initializeApp(
+    //     name: 'clientApp',
+    //     options: const FirebaseOptions(
+    //         apiKey: 'AIzaSyBBWORx3QijzF9mOHcf6pHqBNT4mMW9hIM',
+    //         appId: '1:389302464783:android:b5fb812aff204c3d614e7a',
+    //         messagingSenderId: '389302464783',
+    //         projectId: 'clientloginauth'
+    //     )
+    // );
     final textTheme = Theme.of(context).textTheme;
 
-    return StreamProvider<User>.value(
-        initialData: null,
-        value: AuthServices().user,
+    return StreamProvider<Usuario>.value(
+                initialData: null,
+                value: AuthServices().user,
 
-        child: MaterialApp(
-          title: 'OfferPlus Clientes',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            textTheme: GoogleFonts.oswaldTextTheme(textTheme).copyWith(bodyText1: GoogleFonts.montserrat(textStyle: textTheme.bodyText1)),
-          ),
-          debugShowCheckedModeBanner: false,
-          home: MyHomePage(title: ''),
-        )
-    );
-  }
+                child: MaterialApp(
+                  title: 'OfferPlus Clientes',
+                  theme: ThemeData(
+                    bottomSheetTheme: BottomSheetThemeData(
+                      backgroundColor: Colors.transparent,
+                      // backgroundColor: Color(0xa100528E),
+                    ),
+                    primarySwatch: Colors.blue,
+                    textTheme: GoogleFonts.oswaldTextTheme(textTheme).copyWith(bodyText1: GoogleFonts.montserrat(textStyle: textTheme.bodyText1)),
+                  ),
+                  debugShowCheckedModeBanner: false,
+                  home: MyHomePage(title: ''),
+                )
+            );
+          }
 }
+
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -159,12 +186,18 @@ class MyHomePageState extends State<MyHomePage> {
   //     );
   // }
   //construcción de la clase
+
+
+  // Future<DocumentSnapshot>
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<User>(context);
-    print(user);
+
+    final user = Provider.of<Usuario>(context);
+    // print(user.uid);
+
     return Scaffold(
-      body:SingleChildScrollView(
+      body:
+      SingleChildScrollView(
         child:Container(
           padding: EdgeInsets.symmetric(horizontal: 20),
           height: MediaQuery.of(context).size.height,
