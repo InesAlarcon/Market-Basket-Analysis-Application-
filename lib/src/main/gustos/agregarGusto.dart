@@ -64,7 +64,8 @@ class AgregarGustoState extends State<AgregarGusto>{
           print("USER "+user);
           BusinessDatabaseConnect().getOfertas();
 
-          // DatabaseConnect(uid: user).agregarGustos(gustosController.text);
+          BusinessDatabaseConnect().agregarEmpresa(gustosController.text);
+          DatabaseConnect(uid: user).agregarGustos(gustosController.text);
           Navigator.push(context, MaterialPageRoute(builder: (context) => VerGustos( /*uid: uid*/)));
           }catch(e){
           print(e.toString());
@@ -107,7 +108,7 @@ class AgregarGustoState extends State<AgregarGusto>{
                 //     end: Alignment.bottomCenter,
                 //     colors: [Color(0xff464646), Color(0xff7c7c7c)]),
                 image: DecorationImage(
-                  image: AssetImage("assets/images/background4.png"),
+                  image: AssetImage("assets/images/background2.png"),
                   fit: BoxFit.cover,
                 ),
               ),

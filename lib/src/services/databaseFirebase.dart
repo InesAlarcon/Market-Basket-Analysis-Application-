@@ -131,9 +131,9 @@ class DatabaseConnect {
   }
 
   Future agregarGustos(String gusto) async {
-    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').doc();
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').doc(gusto);
     return ref.set({
-        'docID': ref.id,
+        // 'docID': ref.id,
         'gusto': gusto,
     });
   }
@@ -148,18 +148,18 @@ class DatabaseConnect {
     //   );
     // }).toList();
 
-    print(allData);
+    // print(allData);
     return allData;
 
   }
 
 
-  Future<List> getUser(String usr) async{
-    QuerySnapshot query =  await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').get();
-    final allData = query.docs.map((doc) => doc).toList();
+  Future<String> getUser(String usr) async{
+    var query =  await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('infoUsuario').doc('username').get();
+    final usrName = query.toString();
 
-    print(allData);
-    return allData;
+    print(usrName);
+    return usrName;
 
   }
 
@@ -216,5 +216,15 @@ class BusinessDatabaseConnect{
     print(allOfertas);
     return allOfertas;
 
+  }
+
+  Future agregarEmpresa(String empresa) async{
+    FirebaseApp businessApp = Firebase.app('businessApp');
+
+    final ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(empresa);
+    return ref.set({
+      'name': empresa,
+      'searchKey': empresa.substring(0,1).toUpperCase(),
+    });
   }
 }

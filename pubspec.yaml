@@ -49,6 +49,7 @@ dependencies:
 #  cloud_firestore: ^2.4.0
   gradient_app_bar: ^0.1.3
   provider: ^5.0.0
+  firestore_search: ^0.1.3
 
 
 dev_dependencies:

@@ -108,7 +108,7 @@ class GustosUsuarioState extends State<GustosUsuario>{
       onPressed: () async {
 
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => VerGustos(title: '', /*uid: uid*/)));
+            context, MaterialPageRoute(builder: (context) => VerGustos(/*uid: uid*/)));
 
       },
     );
@@ -138,7 +138,7 @@ class GustosUsuarioState extends State<GustosUsuario>{
             //     end: Alignment.bottomCenter,
             //     colors: [Color(0xff464646), Color(0xff7c7c7c)]),
             image: DecorationImage(
-              image: AssetImage("assets/images/background4.png"),
+              image: AssetImage("assets/images/background2.png"),
               fit: BoxFit.cover,
             ),
           ),

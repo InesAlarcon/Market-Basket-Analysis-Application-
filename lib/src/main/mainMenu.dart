@@ -1,14 +1,19 @@
+// @dart=2.9
+
+
 import 'package:cliente/src/main/gustos/agregarGusto.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cliente/src/main/gustos/gustosUsuario.dart';
 import 'package:cliente/src/services/firestoreStart.dart';
+import 'package:cliente/src/services/searchService.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
 class MainMenu extends StatefulWidget {
-MainMenu({Key? key,required this.title, /*required this.uid*/}) : super(key: key);
+MainMenu({Key key, this.title, /*required this.uid*/}) : super(key: key);
 
 // final String uid;
 final String title;
@@ -21,24 +26,187 @@ class MainMenuState extends State<MainMenu>{
 
   String docuid='';
   final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+  final searchController = TextEditingController();
 
-  Widget searchBar(){
-    return Scaffold(
-      body: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  color: Colors.grey.shade200,
-                  offset: Offset(2, 4),
-                  blurRadius: 5,
-                  spreadRadius: 2)
+  var queryResultSet = [];
+  var tempSearchStore = [];
+
+  initiateSearch(value){
+    if(value.length==0 ){
+      setState(() {
+        queryResultSet = [];
+        tempSearchStore = [];
+      });
+    }
+
+    var capValue = value.substring(0,1).toUpperCase() + value.substring(1);
+
+    if(queryResultSet.length==0 && value.length == 1) {
+      SearchService().searchBy(value).then((QuerySnapshot docs){
+        for(int i=0; i<docs.docs.length; ++i){
+          queryResultSet.add(docs.docs[i].data());
+          setState(() {
+            tempSearchStore.add(queryResultSet[i]);
+          });
+        }
+      });
+
+    }
+    else if (tempSearchStore.length == 0 && value.length > 1) {
+      setState(() {});
+    }
+    else{
+      tempSearchStore = [];
+      queryResultSet.forEach((element) {
+        if (element['name'].toLowerCase().contains(value.toLowerCase()) ==  true) {
+          if (element['name'].toLowerCase().indexOf(value.toLowerCase()) ==0) {
+            setState(() {
+              tempSearchStore.add(element);
+            });
+          }
+        }
+
+      });
+    }
+    setState(() {
+
+    });
+
+
+  }
+
+
+  void searchBar(){
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      transitionDuration: Duration(milliseconds: 500),
+      barrierLabel: MaterialLocalizations.of(context).dialogLabel,
+      barrierColor: Colors.black.withOpacity(0.5),
+      pageBuilder: (context, _, __) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+
+            Container(
+              height: 120,
+              padding: EdgeInsets.symmetric(
+                horizontal: 40,
+                vertical: 10
+              ),
+              width: MediaQuery.of(context).size.width,
+              // color: Colors.white,
+              decoration: BoxDecoration(
+
+              borderRadius: new BorderRadius.only(
+              bottomLeft: const Radius.circular(20),
+              bottomRight: const Radius.circular(20),
+              ),
+              color: Color(0xff00528E),),
+
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    height: 50,
+                  ),
+                  Container(
+                    height: 50,
+                    child: Card(
+                      child: TextField(
+                        onChanged: (val){
+                          print(val);
+                          initiateSearch(val);
+                        },
+                        style: TextStyle(fontSize: 25),
+                      ),
+                    )
+                  ),
+
+                ],
+              ),
+            ),
+                new Expanded(
+                  child:
+                      ListView(
+
+                    // crossAxisCount: 2,
+                    // crossAxisSpacing: 4,
+                    // mainAxisSpacing: 4,
+
+                    physics: ScrollPhysics(),
+                    padding: EdgeInsets.all(10),
+                    // itemCount: queryResultSet.length,
+                    // itemBuilder: (context,_){
+                    //    child ListView(
+                         shrinkWrap: true,
+                    //      physics: ScrollPhysics(),
+                           children: tempSearchStore.map((element) {
+                             return Card(
+                               color: Colors.white,
+                               child: ListTile(
+                                 title: Text(
+                                   element['name'],
+                                   textAlign: TextAlign.center,
+
+                                 ),
+                                 trailing: IconButton(
+                                   onPressed: (){},
+                                   icon: Icon(Icons.star,color: Colors.indigoAccent,),
+                                 ),
+                               ),
+
+                             );
+                           }
+
+                           ).toList()
+                       // );
+                    // },
+
+
+                )
+                  // ListView.builder(
+                  //   shrinkWrap: true,
+                  //   itemCount: 15,
+                  //   physics: ScrollPhysics(),
+                  //   itemBuilder: (BuildContext context, int index){
+                  //
+                  //     return Card(
+                  //       color: Colors.white,
+                  //       child: ListTile(
+                  //         title: Text(
+                  //           "Recomendacion ${index+1}",
+                  //         ),
+                  //       ),
+                  //     );
+                  //   },
+                    // crossAxisAlignment: CrossAxisAlignment.center,
+                    // mainAxisAlignment: MainAxisAlignment.center,
+
+
+                  ),
+                // ),
+                // ),
+                // ),
+                // ),
+
+                // ),
+
               ],
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x80055475), Color(0x8002C39A)])),
-      ),
+
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOut,
+          ).drive(Tween<Offset>(
+            begin: Offset(0, -1.0),
+            end: Offset.zero,
+          )),
+          child: child,
+        );
+      },
     );
   }
 
@@ -53,7 +221,7 @@ class MainMenuState extends State<MainMenu>{
             end: Alignment.bottomCenter,
             colors: [Color(0xff464646), Color(0xff7c7c7c)]),
         image: DecorationImage(
-          image: AssetImage("assets/images/background4.png"),
+          image: AssetImage("assets/images/background2.png"),
           fit: BoxFit.cover,
         ),
       ),
@@ -202,19 +370,29 @@ class MainMenuState extends State<MainMenu>{
 
   @override
   Widget build(BuildContext context) {
+
+    int idx = 0;
+
     FirestoreStart().connectFS2();
     // final height = MediaQuery.of(context).size.height;
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => scaffoldKey.currentState!.openDrawer(),
+          onPressed: () => scaffoldKey.currentState.openDrawer(),
           icon: Icon(Icons.menu),
         ),
 
         actions: <Widget>[
           IconButton(
-              onPressed: (){},
+              onPressed: (){
+                // setState(() {
+                  // tempSearchStore = [];
+                  return searchBar();
+                // });
+
+
+              },
               icon: Icon(Icons.search)),
           IconButton(
               onPressed: () => settings(),
@@ -235,61 +413,121 @@ class MainMenuState extends State<MainMenu>{
 
         children: <Widget> [
           background(),
-          Center(
-            child: SingleChildScrollView(
-              child: Center(
-                child: Container(
+          ListView(
+            shrinkWrap: true,
+            children: <Widget>[
 
-                  alignment: Alignment.center,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                SizedBox(
+                  height: 40,
+                ),
 
-                    children: <Widget>[
+                SizedBox(
+                  height: 250,
+                  child: PageView.builder(
+                      itemCount: 5,
+                      controller: PageController(viewportFraction: 0.9),
+                      onPageChanged: (int index) => setState(() =>  idx = index ),
+                      itemBuilder: (_,i){
 
-                      SizedBox(
-                        child: Container(
-                          width: 300,
-                          height: 200,
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(30)),
-                            boxShadow: <BoxShadow>[
-                              BoxShadow(
-                                  color: Colors.grey.shade800,
-                                  offset: Offset(0, 4),
-                                  blurRadius: 5,
-                                  spreadRadius: 5)
-                            ],
-                            // border: Border.all(color: Colors.grey, width: 2),
-                            image: DecorationImage(
-                              image: AssetImage("assets/images/background.png"),
-                              fit: BoxFit.cover,
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 7),
+
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
+                            ),
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(5)),
+                                // boxShadow: <BoxShadow>[
+                                //   BoxShadow(
+                                //       color: Colors.black,
+                                //       offset: Offset(0, 4),
+                                //       blurRadius: 10,
+                                //       spreadRadius: 2)
+                                // ],
+                                // border: Border.all(color: Colors.grey, width: 2),
+                                image: DecorationImage(
+                                  image: AssetImage("assets/images/background.png"),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              child: Text(
+                                "OFERTA ${i+1}",
+                                style: TextStyle(fontSize: 20, color: Colors.white),
+
+
+
+
+                                //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+
+
+
+                              ),
                             ),
                           ),
-                          child: Text(
-                            'OFERTAS',
-                            style: TextStyle(fontSize: 20, color: Colors.white),
+
+
+                        );
 
 
 
 
-                          //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+                      }
+                  ),
+                  // child:
+                ),
 
+                SizedBox(
+                  height: 40,
 
+                ),
 
+                // Container(
+                //
+                //   child: Center(
+                //     SingleChildScrollView(
+                //       physics: ScrollPhysics(),
+                new Expanded(
+                  child:
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: 9,
+                    physics: ScrollPhysics(),
+                    itemBuilder: (BuildContext context, int index){
+
+                      return Card(
+                        color: Colors.white,
+                        child: ListTile(
+                          title: Text(
+                            "Recomendacion ${index+1}",
                           ),
                         ),
-                      ),
+                      );
+                    },
+                    // crossAxisAlignment: CrossAxisAlignment.center,
+                    // mainAxisAlignment: MainAxisAlignment.center,
 
-                    ],
+
                   ),
                 ),
-              ),
+                // ),
+                // ),
+                // ),
 
+                // ),
+
+              ],
             ),
-          ),
+          // ),
+
+
+
+
+          // ),
 
           ],
           // child: Image.asset("assets/images/background.png"),

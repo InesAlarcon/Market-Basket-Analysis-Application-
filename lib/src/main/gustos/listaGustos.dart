@@ -35,7 +35,7 @@ class ListaGustosState extends State<ListaGustos> {
             end: Alignment.bottomCenter,
             colors: [Color(0xff464646), Color(0xff7c7c7c)]),
         image: DecorationImage(
-          image: AssetImage("assets/images/background4.png"),
+          image: AssetImage("assets/images/background2.png"),
           fit: BoxFit.cover,
         ),
       ),
@@ -84,16 +84,59 @@ class ListaGustosState extends State<ListaGustos> {
 
   }
 
-  // void listaDocsAwait(String uid) async {
-  //   // final userdata = List<dynamic>
-  //
-  //   Future<List> listDocs = DatabaseConnect(uid: uid).getDocID();
-  //   List list = await listDocs;
-  //   listaDocs = list;
-  //   print(listaDocs);
-  //
-  //
-  // }
+ Widget listBuilderSwipe(String uid){
+   RegExp expGusto = new RegExp(r"({gusto: )|(\,(.*))");
+   RegExp expID = new RegExp(r"(\{(.*)(docID: ))|(})");
+
+   return ListView.builder(
+       physics: const ScrollPhysics(),
+       itemCount: listaGustos.length,
+       itemBuilder: (context, index) {
+         return Dismissible(
+           key: /*Key(listaGustos[index].toString())*/UniqueKey(),
+           onDismissed: (direction) async {
+
+             setState(()  {
+               FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').doc(listaGustos[index].toString().replaceAll(expID, '')).delete();
+               listaGustos.removeAt(index);
+             });
+             ScaffoldMessenger.of(context)
+                 .showSnackBar(SnackBar(content: Text('Gusto Eliminado')));
+
+
+           },
+           background: Container(color: Colors.red),
+           child: new Padding(
+             padding: EdgeInsets.only(top: 8.0),
+             child: Card(
+               margin: EdgeInsets.fromLTRB(20.0, 6.0, 20.0, 0.0),
+               child: ListTile(
+                 // leading: CircleAvatar(
+                 //   radius: 25.0,
+                 //   backgroundColor: Colors.grey.shade50,
+                 // ),
+                 title: Text(listaGustos[index].toString().replaceAll(expGusto,''), textAlign: TextAlign.center,),
+                 // trailing: InkWell(
+                 //     child: Icon(Icons.delete_forever_sharp, color: Colors.redAccent,),
+                 //     ),
+
+
+                 //
+                 // onPressed: (){
+                 //
+                 // },
+               ),
+
+             ),
+           ),
+         );
+
+       }
+
+
+   );
+
+ }
 
   @override
   Widget build(BuildContext context){
@@ -104,6 +147,9 @@ class ListaGustosState extends State<ListaGustos> {
     // print("Lista: ");
     // print(user.uid);
     print(listaGustos.length);
+
+    print(listaGustos);
+
 
     // DatabaseConnect(uid: user.uid).agregarGustos("cereal");
 
@@ -122,8 +168,7 @@ class ListaGustosState extends State<ListaGustos> {
     //   },
     //
     // );
-    RegExp expGusto = new RegExp(r"({gusto: )|(\,(.*))");
-    RegExp expID = new RegExp(r"(\{(.*)(docID: ))|(})");
+
 
     return Scaffold(
           appBar: AppBar(
@@ -143,53 +188,7 @@ class ListaGustosState extends State<ListaGustos> {
                   child: StreamBuilder(
                           stream: FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').snapshots(),
                           builder: (context, snapshot) {
-                            return ListView.builder(
-                                physics: const ScrollPhysics(),
-                                itemCount: listaGustos.length,
-                                itemBuilder: (context, index) {
-                                  return Dismissible(
-                                    key: UniqueKey(),
-                                    onDismissed: (direction) async {
-                                      await FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').doc(listaGustos[index].toString().replaceAll(expID, '')).delete();
-                                      setState(() {
-                                        listaGustos.remove(index);
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(content: Text('Gusto Eliminado')));
-
-
-                                    },
-                                    background: Container(color: Colors.red),
-                                    child: new Padding(
-                                      padding: EdgeInsets.only(top: 8.0),
-                                      child: Card(
-                                        margin: EdgeInsets.fromLTRB(20.0, 6.0, 20.0, 0.0),
-                                        child: ListTile(
-                                          // leading: CircleAvatar(
-                                          //   radius: 25.0,
-                                          //   backgroundColor: Colors.grey.shade50,
-                                          // ),
-                                          title: Text(listaGustos[index].toString().replaceAll(expGusto,''), textAlign: TextAlign.center,),
-                                          // trailing: InkWell(
-                                          //     child: Icon(Icons.delete_forever_sharp, color: Colors.redAccent,),
-                                          //     ),
-
-
-                                          //
-                                          // onPressed: (){
-                                          //
-                                          // },
-                                        ),
-
-                                      ),
-                                    ),
-                                  );
-
-                                }
-
-
-                      );
-
+                            return listBuilderSwipe(user.uid);
 
 
 
