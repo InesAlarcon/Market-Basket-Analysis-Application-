@@ -2,6 +2,7 @@
 
 import 'package:cliente/src/main/gustos/agregarGusto.dart';
 import 'package:cliente/src/main/gustos/verGustos.dart';
+import 'package:cliente/src/main/search/searchMenu.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class GustosUsuarioState extends State<GustosUsuario>{
       onPressed: () async {
 
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => VerGustos(/*uid: uid*/)));
+            context, MaterialPageRoute(builder: (context) => SearchMenu(/*uid: uid*/)));
 
       },
     );

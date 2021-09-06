@@ -78,14 +78,17 @@ class ListaGustosState extends State<ListaGustos> {
 
     Future<List> listGustos = DatabaseConnect(uid: uid).getData();
     List list = await listGustos;
-    listaGustos = list;
+    // setState(() {
+      listaGustos = list;
+
+    // });
      // print(listaGustos);
 
 
   }
 
  Widget listBuilderSwipe(String uid){
-   RegExp expGusto = new RegExp(r"({gusto: )|(\,(.*))");
+   RegExp expGusto = new RegExp(r"({gusto: )|(\,(.*)|(}))");
    RegExp expID = new RegExp(r"(\{(.*)(docID: ))|(})");
 
    return ListView.builder(
@@ -94,10 +97,11 @@ class ListaGustosState extends State<ListaGustos> {
        itemBuilder: (context, index) {
          return Dismissible(
            key: /*Key(listaGustos[index].toString())*/UniqueKey(),
-           onDismissed: (direction) async {
+           onDismissed: (direction)  {
+
 
              setState(()  {
-               FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').doc(listaGustos[index].toString().replaceAll(expID, '')).delete();
+               FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').doc(listaGustos[index].toString().replaceAll(expGusto, '')).delete();
                listaGustos.removeAt(index);
              });
              ScaffoldMessenger.of(context)

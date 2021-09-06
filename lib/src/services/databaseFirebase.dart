@@ -138,6 +138,14 @@ class DatabaseConnect {
     });
   }
 
+  Future agregarSuscripcion(String sus) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
+    return ref.set({
+      // 'docID': ref.id,
+      'empresa': sus,
+    });
+  }
+
   Future<List> getData() async{
     QuerySnapshot query =  await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('gustos').get();
     final allData = query.docs.map((doc) => doc.data()).toList();
@@ -205,10 +213,10 @@ class DatabaseConnect {
 
 class BusinessDatabaseConnect{
 
-
+  FirebaseApp businessApp = Firebase.app('businessApp');
 
   Future<List> getOfertas() async{
-    FirebaseApp businessApp = Firebase.app('businessApp');
+    // FirebaseApp businessApp = Firebase.app('businessApp');
 
     QuerySnapshot query = await FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').get();
     final allOfertas = query.docs.map((doc) => doc.data()).toList();
@@ -218,8 +226,19 @@ class BusinessDatabaseConnect{
 
   }
 
+  Future<List> getEmpresa() async{
+    // FirebaseApp businessApp = Firebase.app('businessApp');
+
+    QuerySnapshot query = await FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').get();
+    final allOfertas = query.docs.map((doc) => doc.data()).toList();
+
+    print(allOfertas);
+    return allOfertas;
+
+  }
+
   Future agregarEmpresa(String empresa) async{
-    FirebaseApp businessApp = Firebase.app('businessApp');
+    // FirebaseApp businessApp = Firebase.app('businessApp');
 
     final ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(empresa);
     return ref.set({
