@@ -9,6 +9,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'firestoreStart.dart';
+
 class AuthServices{
 
 
@@ -57,6 +59,7 @@ class AuthServices{
     try{
       UserCredential authUser = await auth.signInWithEmailAndPassword( email: email, password: pass);
       User user = authUser.user;
+      FirestoreStart().connectFS2();
       return firebaseUser(user);
 
     }catch(e){
@@ -138,11 +141,20 @@ class DatabaseConnect {
     });
   }
 
-  Future agregarSuscripcion(String sus) async {
+  Future agregarSuscripcion(String sus, double rating, int vote, String id) async {
     final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
     return ref.set({
-      // 'docID': ref.id,
+      'id': id,
       'empresa': sus,
+      'rating': rating,
+      'voteCount': vote,
+    });
+  }
+
+  Future ratingSubs(String sus, double rating) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
+    return ref.update({
+      'rating': rating,
     });
   }
 
@@ -239,11 +251,23 @@ class BusinessDatabaseConnect{
 
   Future agregarEmpresa(String empresa) async{
     // FirebaseApp businessApp = Firebase.app('businessApp');
-
+    double rate = 4.0;
     final ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(empresa);
     return ref.set({
-      'name': empresa,
+      'nombre': empresa,
       'searchKey': empresa.substring(0,1).toUpperCase(),
+      'rating': rate,
+
     });
   }
+
+  Future voteEmpresa(String docId, int vote) async{
+
+    final ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
+    return ref.update({
+      'voteCount': vote,
+
+    });
+  }
+
 }

@@ -64,7 +64,7 @@ class AgregarGustoState extends State<AgregarGusto>{
           print("USER "+user);
           BusinessDatabaseConnect().getOfertas();
 
-          BusinessDatabaseConnect().agregarEmpresa(gustosController.text);
+          // BusinessDatabaseConnect().agregarEmpresa(gustosController.text);
           DatabaseConnect(uid: user).agregarGustos(gustosController.text);
           Navigator.push(context, MaterialPageRoute(builder: (context) => VerGustos( /*uid: uid*/)));
           }catch(e){

@@ -2,16 +2,24 @@
 
 
 import 'package:cliente/src/main/gustos/agregarGusto.dart';
-import 'package:cliente/src/main/search/searchMenu.dart';
+import 'package:cliente/src/main/gustos/gustosMenu.dart';
+import 'package:cliente/src/main/negocio/negocioPage.dart';
 import 'package:cliente/src/main/search/searchMenuTest.dart';
+import 'package:cliente/src/main/search/searchResult.dart';
+import 'package:cliente/src/main/suscripciones/ratingSub.dart';
+import 'package:cliente/src/main/suscripciones/suscripcionMenu.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cliente/src/main/gustos/gustosUsuario.dart';
 import 'package:cliente/src/services/firestoreStart.dart';
 import 'package:cliente/src/services/searchService.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:cliente/src/usuario.dart';
 
 
 class MainMenu extends StatefulWidget {
@@ -30,305 +38,6 @@ class MainMenuState extends State<MainMenu>{
   final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
   final searchController = TextEditingController();
 
-  var queryResultSet = [];
-  var tempSearchStore = [];
-
-  initiateSearch(value) {
-    if (value.length == 0) {
-      setState(() {
-        queryResultSet = [];
-        tempSearchStore = [];
-      });
-    }
-
-    var capitalizedValue =
-        value.substring(0, 1).toUpperCase() + value.substring(1);
-
-    if (queryResultSet.length == 0 && value.length == 1) {
-      SearchService().searchBy(value).then((QuerySnapshot docs) {
-        for (int i = 0; i < docs.docs.length; ++i) {
-          queryResultSet.add(docs.docs[i].data());
-          setState(() {
-            tempSearchStore.add(queryResultSet[i]);
-          });
-        }
-      });
-    } else {
-      tempSearchStore = [];
-      queryResultSet.forEach((element) {
-        if (element['name'].toLowerCase().contains(value.toLowerCase()) ==  true) {
-          if (element['name'].toLowerCase().indexOf(value.toLowerCase()) ==0) {
-            setState(() {
-              tempSearchStore.add(element);
-            });
-          }
-        }
-
-      });
-
-    }
-    if (tempSearchStore.length == 0 && value.length > 1) {
-      setState(() {});
-    }
-
-  }
-
-
-  void searchTest(){
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      transitionDuration: Duration(milliseconds: 500),
-      barrierLabel: MaterialLocalizations.of(context).dialogLabel,
-      barrierColor: Colors.black.withOpacity(0.5),
-      pageBuilder: (context, _, __) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-
-            Container(
-              height: 120,
-              padding: EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 10
-              ),
-              width: MediaQuery.of(context).size.width,
-              // color: Colors.white,
-              decoration: BoxDecoration(
-
-                borderRadius: new BorderRadius.only(
-                  bottomLeft: const Radius.circular(20),
-                  bottomRight: const Radius.circular(20),
-                ),
-                color: Color(0xff00528E),),
-
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    height: 50,
-                  ),
-                  Container(
-                      height: 50,
-                      child: Card(
-                        child: TextField(
-                          onChanged: (val){
-                            print(val);
-                            initiateSearch(val);
-                          },
-                          style: TextStyle(fontSize: 25),
-                        ),
-                      )
-                  ),
-
-                ],
-              ),
-            ),
-            new Expanded(
-                child:
-                ListView(
-
-                  // crossAxisCount: 2,
-                  // crossAxisSpacing: 4,
-                  // mainAxisSpacing: 4,
-
-                    physics: ScrollPhysics(),
-                    padding: EdgeInsets.all(10),
-                    // itemCount: queryResultSet.length,
-                    // itemBuilder: (context,_){
-                    //    child ListView(
-                    shrinkWrap: true,
-                    //      physics: ScrollPhysics(),
-                    children: tempSearchStore.map((element) {
-                      return Card(
-                        color: Colors.white,
-                        child: ListTile(
-                          title: Text(
-                            element['name'],
-                            textAlign: TextAlign.center,
-
-                          ),
-                          trailing: IconButton(
-                            onPressed: (){},
-                            icon: Icon(Icons.star,color: Colors.indigoAccent,),
-                          ),
-                        ),
-
-                      );
-                    }
-
-                    ).toList()
-                  // );
-                  // },
-
-
-                )
-              // ListView.builder(
-              //   shrinkWrap: true,
-              //   itemCount: 15,
-              //   physics: ScrollPhysics(),
-              //   itemBuilder: (BuildContext context, int index){
-              //
-              //     return Card(
-              //       color: Colors.white,
-              //       child: ListTile(
-              //         title: Text(
-              //           "Recomendacion ${index+1}",
-              //         ),
-              //       ),
-              //     );
-              //   },
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              // mainAxisAlignment: MainAxisAlignment.center,
-
-
-            ),
-            // ),
-            // ),
-            // ),
-            // ),
-
-            // ),
-
-          ],
-
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOut,
-          ).drive(Tween<Offset>(
-            begin: Offset(0, -1.0),
-            end: Offset.zero,
-          )),
-          child: child,
-        );
-      },
-    );
-  }
-
-
-  void searchBar(){
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      transitionDuration: Duration(milliseconds: 500),
-      barrierLabel: MaterialLocalizations.of(context).dialogLabel,
-      barrierColor: Colors.black.withOpacity(0.5),
-      pageBuilder: (context, _, __) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-
-            Container(
-              height: 120,
-              padding: EdgeInsets.symmetric(
-                horizontal: 40,
-                vertical: 10
-              ),
-              width: MediaQuery.of(context).size.width,
-              // color: Colors.white,
-              decoration: BoxDecoration(
-
-              borderRadius: new BorderRadius.only(
-              bottomLeft: const Radius.circular(20),
-              bottomRight: const Radius.circular(20),
-              ),
-              color: Color(0xff00528E),),
-
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    height: 50,
-                  ),
-                  Container(
-                    height: 50,
-                    child: Card(
-                      child: TextField(
-                        onChanged: (val){
-                          print(val);
-                          initiateSearch(val);
-                        },
-                        style: TextStyle(fontSize: 25),
-                      ),
-                    )
-                  ),
-
-                ],
-              ),
-            ),
-                new Expanded(
-                  child:
-                  ListView(
-                      padding: EdgeInsets.only(left: 10.0, right: 10.0),
-                      // crossAxisCount: 2,
-                      // crossAxisSpacing: 4.0,
-                      // mainAxisSpacing: 4.0,
-                      primary: false,
-                      shrinkWrap: true,
-                      children: tempSearchStore.map((element) {
-                        return Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                            elevation: 2.0,
-                            child: Container(
-                                child: Center(
-                                    child: Text(element['name'],
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 20.0,
-                                      ),
-                                    )
-                                )
-                            )
-                        );
-                      }).toList())
-                  // ListView.builder(
-                  //   shrinkWrap: true,
-                  //   itemCount: 15,
-                  //   physics: ScrollPhysics(),
-                  //   itemBuilder: (BuildContext context, int index){
-                  //
-                  //     return Card(
-                  //       color: Colors.white,
-                  //       child: ListTile(
-                  //         title: Text(
-                  //           "Recomendacion ${index+1}",
-                  //         ),
-                  //       ),
-                  //     );
-                  //   },
-                    // crossAxisAlignment: CrossAxisAlignment.center,
-                    // mainAxisAlignment: MainAxisAlignment.center,
-
-
-                  ),
-                // ),
-                // ),
-                // ),
-                // ),
-
-                // ),
-
-              ],
-
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOut,
-          ).drive(Tween<Offset>(
-            begin: Offset(0, -1.0),
-            end: Offset.zero,
-          )),
-          child: child,
-        );
-      },
-    );
-  }
 
   Widget background(){
     return Container(
@@ -464,23 +173,53 @@ class MainMenuState extends State<MainMenu>{
             ),
           ),
 
-          ListTile(
-            title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
-
+          Container(
+          child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            color: Color(0xa000528E),
+              child: ListTile(
+                title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SuscripcionMenu()));
+                },
+              ),
+            ),
           ),
-          ListTile(
-            title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
-            onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '',uid: docuid,)));
-            },
-          ),
-          ListTile(
-            title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
+          Container(
+            child: Card(
+              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
 
+              color: Color(0xa000528E),
+              child: ListTile(
+                title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '',uid: docuid,)));
+                },
+              ),
+            ),
           ),
-          ListTile(
-            title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
 
+          Container(
+            child: Card(
+              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+
+              color: Color(0xa000528E),
+              child: ListTile(
+                 title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
+
+                  ),
+            ),
+          ),
+          Container(
+            child: Card(
+              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+
+              color: Color(0xa000528E),
+              child: ListTile(
+                    title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
+
+                ),
+              ),
             ),
           ],
         )
@@ -488,12 +227,250 @@ class MainMenuState extends State<MainMenu>{
     );
   }
 
+
+  var listaRecRating = [];
+  var finalList = [];
+
+  void gustosVerify(context) async {
+    RegExp expGusto = new RegExp(r"({gusto: )|(})");
+
+    final user = Provider.of<Usuario>(context);
+    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').get();
+
+    listaRecRating = snapshot.docs.map((doc) {
+      String gustos = doc.data().toString().replaceAll(expGusto, '');
+      return gustos;
+    }).toList();
+    // print(listaRecRating);
+  }
+
+
+
+  Widget buildListRec(QuerySnapshot snapshot1, QuerySnapshot snapshot2, String uid){
+    final user = Provider.of<Usuario>(context);
+    var listaFiltro = [];
+    // print(snapshot2.size);
+    for(int i = 0; i < snapshot1.size; i++){
+      // print(snapshot1.docs[i].id);
+      for(int j = 0; j < snapshot2.size; j++){
+        // print(snapshot2.docs[j]["gusto"]);
+        if(snapshot2.docs[j]["gusto"]==snapshot1.docs[i]["type"]){
+          // print(snapshot1.docs[i]["type"]);
+          listaFiltro.add(snapshot1.docs[i]["type"]);
+        }
+      }
+
+    }
+
+
+    return ListView.builder(
+        itemCount: snapshot1.docs.length,
+        itemBuilder: (context, index){
+          final doc = snapshot1.docs[index];
+          final double num = doc["defaultRating"]+0.0;
+          if(listaFiltro.isNotEmpty){
+            if(listaFiltro.contains(doc["type"])){
+              return new InkWell(
+                onTap: ()  {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => NegocioPage(pageid: doc.id,)));
+                },
+
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: new BorderRadius.all(Radius.circular(10))
+
+                  ),
+
+                  margin: EdgeInsets.all(10),
+
+                  child: Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        width: 200,
+                        // color: Colors.amber,
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          doc["nombre"],
+                          // textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 22),
+                        ),
+                      ),
+                      Column(
+                        children: <Widget>[
+                          SizedBox(
+                            height: 20,
+                          ),
+                          RatingBarIndicator(
+                            rating: num,
+                            itemBuilder: (context, index) => Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            itemCount: 5,
+                            itemSize: 20,
+                            itemPadding: EdgeInsets.all(1),
+                          ),
+
+
+                        ],
+                      ),
+                      SizedBox(
+                        width: 30,
+                      ),
+                      Container(
+                        // color: Colors.red,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Center(
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: Color(0xff108aa6),
+                                  borderRadius: new BorderRadius.all(
+                                    Radius.circular(10),
+
+                                  ),
+                                ),
+                                child: IconButton(
+                                  onPressed: (){
+                                    print(doc.id);
+                                    final int vote = doc["voteCount"]+1;
+                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
+                                    BusinessDatabaseConnect().voteEmpresa(doc.id, vote);
+                                    setState(() {
+                                      // changeIcon();
+
+                                    });
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(content: Text('Suscrito a ${doc['nombre']}')));
+                                  },
+                                  icon: Icon(Icons.add, color: Colors.white,),
+                                ),
+                              ),
+                            ),
+                          )),
+                    ],
+                  ),
+                )
+              );
+            }
+          }
+          else{
+            return new InkWell(
+                onTap: ()  {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => NegocioPage(pageid: doc.id,)));
+                      // context, MaterialPageRoute(builder: (context) => RatingSub()));
+                },
+
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: new BorderRadius.all(Radius.circular(10))
+
+                  ),
+
+                  margin: EdgeInsets.all(10),
+
+                  child: Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        width: 150,
+                        // color: Colors.amber,
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          doc["nombre"],
+                          // textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 22),
+                        ),
+                      ),
+                      Column(
+                        children: <Widget>[
+                          SizedBox(
+                            height: 20,
+                          ),
+                          RatingBarIndicator(
+                            rating: num,
+                            itemBuilder: (context, index) => Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            itemCount: 5,
+                            itemSize: 20,
+                            itemPadding: EdgeInsets.all(1),
+                          ),
+
+
+                        ],
+                      ),
+                      SizedBox(
+                        width: 30,
+                      ),
+                      Container(
+                          // color: Colors.red,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Center(
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: Color(0xff108aa6),
+                                  borderRadius: new BorderRadius.all(
+                                    Radius.circular(10),
+
+                                  ),
+                                ),
+                                child: IconButton(
+                                  onPressed: (){
+                                    print(doc.id);
+                                    final int vote = doc["voteCount"]+1;
+                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
+                                    BusinessDatabaseConnect().voteEmpresa(doc.id, vote);
+                                    setState(() {
+                                      // changeIcon();
+
+                                    });
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(content: Text('Suscrito a ${doc['nombre']}')));
+                                  },
+                                  icon: Icon(Icons.add, color: Colors.white,),
+                                ),
+                              ),
+                            ),
+                          )),
+
+
+                    ],
+                  ),
+                )
+            );
+          }
+
+        }
+
+    );
+
+
+  }
+
+
   @override
   Widget build(BuildContext context) {
-
+    final user = Provider.of<Usuario>(context);
     int idx = 0;
 
     FirestoreStart().connectFS2();
+    // gustosVerify(context);
     // final height = MediaQuery.of(context).size.height;
     return Scaffold(
       key: scaffoldKey,
@@ -541,16 +518,16 @@ class MainMenuState extends State<MainMenu>{
 
           Column(
             // shrinkWrap: true,
-            children: <Widget>[
+            children: [
 
                 // SizedBox(
                 //   height: 250,
                 // ),
               SizedBox(
-                height: 250,
+                height: 170,
                 child: PageView.builder(
                     itemCount: 5,
-                    controller: PageController(viewportFraction: 0.9),
+                    controller: PageController(/*viewportFraction: 0.9*/),
                     onPageChanged: (int index) => setState(() =>  idx = index ),
                     itemBuilder: (_,i){
 
@@ -576,13 +553,13 @@ class MainMenuState extends State<MainMenu>{
                               // ],
                               // border: Border.all(color: Colors.grey, width: 2),
                               image: DecorationImage(
-                                image: AssetImage("assets/images/white.png"),
+                                image: AssetImage("assets/images/darkblue.jpg"),
                                 fit: BoxFit.cover,
                               ),
                             ),
                             child: Text(
                               "OFERTA ${i+1}",
-                              style: TextStyle(fontSize: 20, color: Colors.black),
+                              style: TextStyle(fontSize: 20, color: Colors.white),
 
 
 
@@ -611,35 +588,37 @@ class MainMenuState extends State<MainMenu>{
                   height: 40,
 
                 ),
-
-                // Container(
-                //
-                //   child: Center(
-                //     SingleChildScrollView(
-                //       physics: ScrollPhysics(),
-                new Expanded(
-                  child:
-                  ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: 9,
-                    physics: ScrollPhysics(),
-                    itemBuilder: (BuildContext context, int index){
-
-                      return Card(
-                        color: Colors.white,
-                        child: ListTile(
-                          title: Text(
-                            "Recomendacion ${index+1}",
-                          ),
-                        ),
-                      );
-                    },
-                    // crossAxisAlignment: CrossAxisAlignment.center,
-                    // mainAxisAlignment: MainAxisAlignment.center,
-
-
-                  ),
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').snapshots(),
+                  builder: (context, snapshot1){
+                    return StreamBuilder(
+                        stream: FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').snapshots(),
+                        builder: (context, snapshot2){
+                          if(!snapshot1.hasData) return LinearProgressIndicator();
+                          return Expanded(child: buildListRec(snapshot1.data, snapshot2.data, user.uid));
+                        }
+                    );
+                    // gustosVerify(context);
+                    // if(!snapshot.hasData) return LinearProgressIndicator();
+                    // return Expanded(child: buildListRec(snapshot.data));
+                  },
                 ),
+                // new Expanded(
+                //   child:
+                //   ListView.builder(
+                //     shrinkWrap: true,
+                //     itemCount: empresas.length,
+                //     physics: ScrollPhysics(),
+                //     itemBuilder: (BuildContext context, int index){
+                //
+                //       return recommendEmpresa(empresas[index], context);
+                //     },
+                //     // crossAxisAlignment: CrossAxisAlignment.center,
+                //     // mainAxisAlignment: MainAxisAlignment.center,
+                //
+                //
+                //   ),
+                // ),
                 // ),
                 // ),
                 // ),

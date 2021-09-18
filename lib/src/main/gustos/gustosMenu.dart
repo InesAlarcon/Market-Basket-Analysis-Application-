@@ -12,12 +12,12 @@ import 'package:provider/provider.dart';
 
 import '../../usuario.dart';
 
-class SearchMenu extends StatefulWidget {
+class GustosMenu extends StatefulWidget {
   @override
-  SearchMenuState createState() => SearchMenuState();
+  GustosMenuState createState() => GustosMenuState();
 }
 
-class SearchMenuState extends State<SearchMenu> {
+class GustosMenuState extends State<GustosMenu> {
   // This holds a list of fiction users
   // You can use data fetched from a database or cloud as well
   TextEditingController searchController = TextEditingController();
@@ -161,7 +161,7 @@ class SearchMenuState extends State<SearchMenu> {
 
                                 },
                               background: Container(color: Colors.red),
-                              child: SearchResult(empresas[index]),
+                              child: SearchResultGusto(empresas[index]),
                             );
                           }
 

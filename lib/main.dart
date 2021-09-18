@@ -53,6 +53,7 @@ class MyApp extends StatelessWidget {
                 child: MaterialApp(
                   title: 'OfferPlus Clientes',
                   theme: ThemeData(
+                    scaffoldBackgroundColor: const Color(0xffbacee3),
                     bottomSheetTheme: BottomSheetThemeData(
                       backgroundColor: Colors.transparent,
                       // backgroundColor: Color(0xa100528E),

@@ -1,6 +1,8 @@
 // @dart=2.9
 import 'dart:io';
 
+import 'package:cliente/src/main/negocio/negocioPage.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:cliente/src/main/search/searchResult.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
@@ -19,6 +21,8 @@ class SearchMenuTest extends StatefulWidget {
 }
 
 class SearchMenuTestState extends State<SearchMenuTest> {
+
+
   var queryResultSet = [];
   var tempSearchStore = [];
 
@@ -36,7 +40,18 @@ class SearchMenuTestState extends State<SearchMenuTest> {
     if (queryResultSet.length == 0 && value.length == 1) {
       SearchService().searchBy(value).then((QuerySnapshot docs) {
         for (int i = 0; i < docs.docs.length; ++i) {
-          queryResultSet.add(docs.docs[i].data());
+
+          var docSnap = docs.docs[i].data();
+
+          queryResultSet = docs.docs.map((e) => {
+            "id": e.id,
+            "nombre": e.get("nombre"),
+            "defaultRating": e.get("defaultRating"),
+            "voteCount": e.get("voteCount"),
+          }).toList();
+          print(queryResultSet);
+
+          print(queryResultSet);
           setState(() {
             tempSearchStore.add(queryResultSet[i]);
           });
@@ -45,10 +60,11 @@ class SearchMenuTestState extends State<SearchMenuTest> {
     } else {
       tempSearchStore = [];
       queryResultSet.forEach((element) {
-        if (element['name'].toLowerCase().contains(value.toLowerCase()) ==  true) {
-          if (element['name'].toLowerCase().indexOf(value.toLowerCase()) ==0) {
+        if (element['nombre'].toLowerCase().contains(value.toLowerCase()) ==  true) {
+          if (element['nombre'].toLowerCase().indexOf(value.toLowerCase()) ==0) {
             setState(() {
               tempSearchStore.add(element);
+
             });
           }
         }
@@ -82,8 +98,15 @@ class SearchMenuTestState extends State<SearchMenuTest> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
+    Icon subscribeIcon = new Icon(Icons.add, color: Color(0xff108aa6),);
+    changeIcon(){
+      subscribeIcon = new Icon(Icons.check_rounded, color: Colors.green,);
+    }
+
+    bool selected = true;
     final user = Provider.of<Usuario>(context);
 
     return new Scaffold(
@@ -127,37 +150,62 @@ class SearchMenuTestState extends State<SearchMenuTest> {
                     primary: false,
                     shrinkWrap: true,
                     children: tempSearchStore.map((element) {
-                      return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3.0)),
-                          elevation: 2.0,
-                          child: Container(
-                            height: 50,
-                              child: ListTile(
-                                leading: IconButton(
-                                  onPressed: (){
-                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(element['name']);
 
-                                  },
-                                    icon: Icon(Icons.add,color: Color(0xff108aa6),),
-                                  ),
-                                  title: Text(element['name'],
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20.0,
+                      // print(element['rating']);
+                      final double num = element['defaultRating']+0.0;
+
+                      return InkWell(
+                          onTap: ()  {
+                            Navigator.push(
+                                context, MaterialPageRoute(builder: (context) => NegocioPage(pageid: element['id'],)));
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3.0)),
+                            elevation: 2.0,
+                            child: Container(
+                              height: 50,
+                                child: ListTile(
+                                  leading: IconButton(
+                                    onPressed: (){
+                                      final int vote = element["voteCount"]+1;
+                                      // final double num = element['defaultRating']+.0;
+                                      // BusinessDatabaseConnect().voteEmpresa(, vote);
+                                      DatabaseConnect(uid: user.uid).agregarSuscripcion(element['nombre'], num, vote, element['id']);
+                                      setState(() {
+                                        // changeIcon();
+
+                                      });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(content: Text('Suscrito a ${element['nombre']}')));
+                                    },
+                                      icon: subscribeIcon,
                                     ),
-                                  ),
-                                trailing: IconButton(
-                                  onPressed: (){
-                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(element['name']);
-
-                                  },
-                                  icon: Icon(Icons.star,color: Colors.orangeAccent,),
-                                ),
+                                    title: Text(element['nombre'],
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 20.0,
+                                      ),
+                                    ),
+                                  trailing: Container(
+                                    color: Colors.white,
+                                  height: 40,
+                                  width: 100,
+                                  child: RatingBarIndicator(
+                                    rating: num,
+                                    itemBuilder: (context, index) => Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    itemCount: 5,
+                                    itemSize: 17,
+                                    itemPadding: EdgeInsets.all(1),
+                                      )
+                                )
                               )
-                          )
+                            )
 
-                      );
+                        ));
                     }).toList())
                  ])
                 ]

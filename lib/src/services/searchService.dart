@@ -9,4 +9,14 @@ class SearchService {
     ).get();
   }
 
+  searchByID(String searchField){
+    return FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').where(
+        'id',isEqualTo: searchField
+    ).get();
+  }
+
+  getByID(String searchField){
+    return FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').doc(searchField).get();
+  }
+
 }
