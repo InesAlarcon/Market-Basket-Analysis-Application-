@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:cliente/src/main/mainMenu.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:cliente/src/main/search/searchResult.dart';
@@ -19,10 +20,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 
 class NegocioPage extends StatefulWidget {
-  NegocioPage({this.pageid, this.userid});
+  NegocioPage({this.pageid});
 
   final String pageid;
-  final String userid;
+  // final String userid;
   // final String pagetitle;
 
 
@@ -36,10 +37,17 @@ class NegocioPageState extends State<NegocioPage> {
   Set<Marker> markersMap = HashSet<Marker>();
 
   var data;
+  var datauser;
+
+
+
 
   Icon subscribeIcon = new Icon(Icons.add, color: Color(0xff108aa6),);
-  changeIcon(){
+  changeIconSub(){
     subscribeIcon = new Icon(Icons.check_rounded, color: Colors.green,);
+  }
+  changeIconUnSub(){
+    subscribeIcon = new Icon(Icons.add, color: Color(0xff108aa6),);
   }
 
 
@@ -76,10 +84,10 @@ class NegocioPageState extends State<NegocioPage> {
   void initState(){
     super.initState();
     pageid = widget.pageid;
-    userid = widget.userid;
+    // userid = widget.userid;
 
     print(pageid);
-    print(userid);
+    // print(userid);
 
 
   }
@@ -167,10 +175,21 @@ class NegocioPageState extends State<NegocioPage> {
               builder: (context,snapshot2){
 
                 data = snapshot.data;
+                bool issub = false;
+
+
+
                 double inlat=0.0;
                 double inlng=0.0;
                 double rate = data["defaultRating"]+0.0;
 
+
+                for(int i = 0; i < snapshot2.data.size;i++){
+                  if(snapshot2.data.docs[i]["id"]==pageid){
+                    issub = true;
+                    changeIconSub();
+                  }
+                }
 
 
 
@@ -191,8 +210,20 @@ class NegocioPageState extends State<NegocioPage> {
                       iconTheme: IconThemeData(
                         color: Colors.black38,
                       ),
+                      actions: <Widget>[
+                        IconButton(
+                            onPressed: () async {
+                              int count = 0;
+                              Navigator.of(context).popUntil((route){
+                                return route.settings.name =='mainMenu';
+                              });
+
+
+                            },
+                            icon: Icon(Icons.home)),
+                      ],
                       flexibleSpace: FlexibleSpaceBar(
-                        titlePadding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                        titlePadding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                         centerTitle: false,
                         title: Row(
                           children: <Widget>[
@@ -207,6 +238,7 @@ class NegocioPageState extends State<NegocioPage> {
                             // SizedBox(
                             //   width: 30,
                             // ),
+
                             SizedBox(
                               child: RatingBarIndicator(
                                 rating: rate,
@@ -219,10 +251,16 @@ class NegocioPageState extends State<NegocioPage> {
                                 itemPadding: EdgeInsets.all(1),
                               ),
                             ),
-                            SizedBox(
+                            if (data["companyTitle"]) SizedBox(
+                                child: Text(
+                                  data["nombre"],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.black, fontSize: 12),
+                                ),
+                              )
+                            else SizedBox(
                               height: 30,
                               width: 70,
-
                             ),
                             SizedBox(
                               height: 30,
@@ -230,12 +268,63 @@ class NegocioPageState extends State<NegocioPage> {
                               child: IconButton(
 
                                 onPressed: (){
+                                  int voteC = data["voteCount"];
+
+                                  if(issub){
+                                    showDialog(
+                                        barrierDismissible: true,
+                                        context: context,
+                                        builder: (context){
+                                          return AlertDialog(
+                                            elevation: 24,
+                                            title: Text("Quieres quitar tu suscripción?"),
+                                            actions: [
+                                              TextButton(onPressed: (){
+                                                Navigator.pop(context);
+                                              },
+                                                child: Text("No"),
+                                              ),
+                                              TextButton(onPressed: (){
+                                                bool vote = false;
+                                                FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('suscripciones').doc(data["nombre"]).delete();
+                                                BusinessDatabaseConnect().voteEmpresa(pageid, vote);
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(SnackBar(content: Text('Suscripción a ${data['nombre']} Eliminada')));
+                                              },
+                                                child: Text("Si"),
+                                              ),
+
+                                            ],
+                                          );
+                                        }
+                                    );
+
+                                    setState(() {
+                                      issub = false;
+
+                                    });
+                                  }else{
+                                    print(data.id);
+                                    bool vote=true;
+                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(data['nombre'], rate, voteC, pageid);
+                                    BusinessDatabaseConnect().voteEmpresa(pageid, vote);
+                                    setState(() {
+                                      changeIconUnSub();
+
+                                    });
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(content: Text('Suscrito a ${data['nombre']}')));
+                                  }
+
 
                                 },
                                 iconSize: 20,
-                                icon: subscribeIcon,
+                                icon: Icon(issub ? Icons.check_rounded : Icons.add),
+                                  color:  Color(0xff108aa6),
+                                ),
                               ),
-                            ),
+
 
                           ],
                         ),

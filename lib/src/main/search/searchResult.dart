@@ -10,16 +10,16 @@ import 'package:provider/provider.dart';
 
 import '../../usuario.dart';
 
-class Empresa {
+class GustosUser {
   String name;
 
 
-  Empresa(
+  GustosUser(
       this.name,
 
       );
 
-  Empresa.fromSnapshot(DocumentSnapshot snapshot) : name = snapshot['gusto'];
+  GustosUser.fromSnapshot(DocumentSnapshot snapshot) : name = snapshot['gusto'];
 }
 
 class EmpresaSus {
@@ -71,7 +71,7 @@ class EmpresaRecommend{
 enum Filtros {TODO, GUSTOS}
 
 Widget SearchResultGusto(DocumentSnapshot snapshot){
-  final empresa = Empresa.fromSnapshot(snapshot);
+  final empresa = GustosUser.fromSnapshot(snapshot);
   print(empresa.name);
 
 
@@ -103,13 +103,7 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
 
   double empRate = empresa.rating;
 
-  return new InkWell(
-    onTap: ()  {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => NegocioPage(pageid: empresa.id)));
-    },
-
-    child: Container(
+  return new Container(
       height: 100,
     decoration: BoxDecoration(
         color: Colors.white,
@@ -124,7 +118,13 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
         SizedBox(
           width: 10,
         ),
-        Container(
+        InkWell(
+          onTap: ()  {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => NegocioPage(pageid: empresa.id)));
+          },
+
+          child: Container(
           padding: EdgeInsets.all(10),
           width: 200,
           // color: Colors.amber,
@@ -134,6 +134,7 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
             // textAlign: TextAlign.center,
             style: TextStyle(fontSize: 22),
           ),
+        ),
         ),
         Column(
             children: <Widget>[
@@ -159,9 +160,9 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
 
                         },
                       ),
-              // SizedBox(
-              //   height: 10,
-              // ),
+              SizedBox(
+                height: 5,
+              ),
               SizedBox(
                 height: 60,
                 width: 120,
@@ -177,7 +178,7 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
                       final int vote = empresa.vote+1;
                       // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
                       DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, empRate);
-                      BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+                      // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
                       ScaffoldMessenger.of(context)
                           .showSnackBar(SnackBar(content: Text('Calificación de ${empresa.name} modificada')));
                     },
@@ -256,7 +257,7 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
     //   ),
     // ),
     // ),
-    )
+
   );
 
 

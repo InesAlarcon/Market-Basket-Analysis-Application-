@@ -57,7 +57,7 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
 
     if(searchController.text != "") {
       for(var empresaSnapshot in allRes){
-        var title = Empresa.fromSnapshot(empresaSnapshot).name.toLowerCase();
+        var title = GustosUser.fromSnapshot(empresaSnapshot).name.toLowerCase();
 
         if(title.contains(searchController.text.toLowerCase())) {
           showResults.add(empresaSnapshot);
@@ -148,11 +148,14 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
                                 key: /*Key(listaGustos[index].toString())*/UniqueKey(),
                                 onDismissed: (direction)  {
                                   final empresa = EmpresaSus.fromSnapshot(empresas[index]);
-
+                                  int vote = empresa.vote;
+                                  bool voteVal = false;
 
 
                                   setState(()  {
+                                    vote--;
                                     FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('suscripciones').doc(empresa.name).delete();
+                                    BusinessDatabaseConnect().voteEmpresa(empresa.id, voteVal);
                                     empresas.removeAt(index);
                                   });
                                   ScaffoldMessenger.of(context)

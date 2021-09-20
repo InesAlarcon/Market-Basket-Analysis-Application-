@@ -1,6 +1,7 @@
 // @dart=2.9
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cliente/src/main/mainMenu.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cliente/src/services/firestoreStart.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -61,6 +62,11 @@ class MyApp extends StatelessWidget {
                     primarySwatch: Colors.blue,
                     textTheme: GoogleFonts.oswaldTextTheme(textTheme).copyWith(bodyText1: GoogleFonts.montserrat(textStyle: textTheme.bodyText1)),
                   ),
+                  routes: {
+
+                    '/mainMenu': (context) => MainMenu(title: "",),
+                  },
+
                   debugShowCheckedModeBanner: false,
                   home: MyHomePage(title: ''),
                 )

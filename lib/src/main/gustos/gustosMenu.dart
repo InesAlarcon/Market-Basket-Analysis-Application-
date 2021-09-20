@@ -57,7 +57,7 @@ class GustosMenuState extends State<GustosMenu> {
 
     if(searchController.text != "") {
       for(var empresaSnapshot in allRes){
-        var title = Empresa.fromSnapshot(empresaSnapshot).name.toLowerCase();
+        var title = GustosUser.fromSnapshot(empresaSnapshot).name.toLowerCase();
 
         if(title.contains(searchController.text.toLowerCase())) {
           showResults.add(empresaSnapshot);
@@ -86,7 +86,7 @@ class GustosMenuState extends State<GustosMenu> {
     });
     searchResultsList();
     return "Completado";
-    
+
   }
 
   Widget background(){
@@ -147,7 +147,7 @@ class GustosMenuState extends State<GustosMenu> {
                             return Dismissible(
                                 key: /*Key(listaGustos[index].toString())*/UniqueKey(),
                                 onDismissed: (direction)  {
-                                  final empresa = Empresa.fromSnapshot(empresas[index]);
+                                  final empresa = GustosUser.fromSnapshot(empresas[index]);
 
 
 

@@ -170,8 +170,12 @@ class LoginFormState extends State<LoginForm>{
           if(resultado == null){
             setState(() => error = 'No se pudo hacer login con la información suministrada');
           } else{
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => MainMenu(title: '', /*uid: uid*/)));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) {
+                  return MainMenu(title: '',);
+                },
+                settings: RouteSettings(name: 'mainMenu'),
+            ));
           }
 
           print(usuario);
@@ -308,6 +312,7 @@ class LoginFormState extends State<LoginForm>{
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
+      backgroundColor: Colors.white,
         body: Container(
           height: height,
           //

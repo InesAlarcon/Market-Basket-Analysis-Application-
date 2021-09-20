@@ -150,6 +150,15 @@ class DatabaseConnect {
       'voteCount': vote,
     });
   }
+  Future quitarSuscripcion(String sus, double rating, int vote, String id) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
+    return ref.set({
+      'id': id,
+      'empresa': sus,
+      'rating': rating,
+      'voteCount': vote,
+    });
+  }
 
   Future ratingSubs(String sus, double rating) async {
     final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
@@ -261,9 +270,25 @@ class BusinessDatabaseConnect{
     });
   }
 
-  Future voteEmpresa(String docId, int vote) async{
+  Future voteEmpresa(String docId, bool voteVal) async{
+    int vote=0;
+    
+    var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
+    var query= await FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId).get();
 
-    final ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
+    var data = query.data();
+    print(data['voteCount']);
+
+    if(voteVal){
+      vote = data['voteCount']+1;
+
+
+    }else{
+      vote = data['voteCount']-1;
+    }
+
+
+
     return ref.update({
       'voteCount': vote,
 

@@ -25,8 +25,8 @@ import 'package:cliente/src/usuario.dart';
 class MainMenu extends StatefulWidget {
 MainMenu({Key key, this.title, /*required this.uid*/}) : super(key: key);
 
-// final String uid;
-final String title;
+
+  final String title;
 
 @override
 MainMenuState createState() => MainMenuState();
@@ -265,6 +265,7 @@ class MainMenuState extends State<MainMenu>{
 
     return ListView.builder(
         itemCount: snapshot1.docs.length,
+        // ignore: missing_return
         itemBuilder: (context, index){
           final doc = snapshot1.docs[index];
           final double num = doc["defaultRating"]+0.0;
@@ -293,7 +294,7 @@ class MainMenuState extends State<MainMenu>{
                       ),
                       Container(
                         padding: EdgeInsets.all(10),
-                        width: 200,
+                        width: 170,
                         // color: Colors.amber,
                         alignment: Alignment.topLeft,
                         child: Text(
@@ -340,8 +341,9 @@ class MainMenuState extends State<MainMenu>{
                                 child: IconButton(
                                   onPressed: (){
                                     print(doc.id);
-                                    final int vote = doc["voteCount"]+1;
-                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
+                                    final int voteC = doc["voteCount"]+1;
+                                    final bool vote = true;
+                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, voteC, doc.id);
                                     BusinessDatabaseConnect().voteEmpresa(doc.id, vote);
                                     setState(() {
                                       // changeIcon();
@@ -386,7 +388,7 @@ class MainMenuState extends State<MainMenu>{
                       ),
                       Container(
                         padding: EdgeInsets.all(10),
-                        width: 150,
+                        width: 170,
                         // color: Colors.amber,
                         alignment: Alignment.topLeft,
                         child: Text(
@@ -433,8 +435,10 @@ class MainMenuState extends State<MainMenu>{
                                 child: IconButton(
                                   onPressed: (){
                                     print(doc.id);
-                                    final int vote = doc["voteCount"]+1;
-                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
+                                    final int voteC = doc["voteCount"]+1;
+                                    // ignore: missing_return
+                                    final bool vote = true;
+                                    DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, voteC, doc.id);
                                     BusinessDatabaseConnect().voteEmpresa(doc.id, vote);
                                     setState(() {
                                       // changeIcon();
