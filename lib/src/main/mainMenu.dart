@@ -323,7 +323,7 @@ class MainMenuState extends State<MainMenu>{
                         ],
                       ),
                       SizedBox(
-                        width: 30,
+                        width: 10,
                       ),
                       Container(
                         // color: Colors.red,
@@ -339,6 +339,7 @@ class MainMenuState extends State<MainMenu>{
                                   ),
                                 ),
                                 child: IconButton(
+
                                   onPressed: (){
                                     print(doc.id);
                                     final int voteC = doc["voteCount"]+1;
@@ -417,7 +418,7 @@ class MainMenuState extends State<MainMenu>{
                         ],
                       ),
                       SizedBox(
-                        width: 30,
+                        width: 10,
                       ),
                       Container(
                           // color: Colors.red,
@@ -433,6 +434,7 @@ class MainMenuState extends State<MainMenu>{
                                   ),
                                 ),
                                 child: IconButton(
+
                                   onPressed: (){
                                     print(doc.id);
                                     final int voteC = doc["voteCount"]+1;
@@ -467,6 +469,50 @@ class MainMenuState extends State<MainMenu>{
 
   }
 
+
+  void showAlert(BuildContext context){
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context)
+      {
+        return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.all(10),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: <Widget>[
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+
+                      Container(
+                        width: double.infinity,
+                        height: 400,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            color: Colors.white
+                        ),
+                        padding: EdgeInsets.fromLTRB(20, 50, 20, 20),
+                        child: Text("Seleccionar gustos iniciales",
+                            style: TextStyle(fontSize: 24),
+                            textAlign: TextAlign.center
+                        ),
+                      ),
+                    ],
+                  ),
+
+
+
+
+              ],
+            )
+        );
+      });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -515,122 +561,137 @@ class MainMenuState extends State<MainMenu>{
 
       drawer: drawerPrincipal(),
 
-      body: Stack(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').snapshots(),
+        builder: (context, snapshot2){
+          var dataGustos = snapshot2.data;
 
-        children: <Widget> [
-          background(),
 
-          Column(
-            // shrinkWrap: true,
-            children: [
+          if(dataGustos.size<3){
+            Future.delayed(Duration.zero, ()=> showAlert(context));
+          }
 
-                // SizedBox(
-                //   height: 250,
-                // ),
-              SizedBox(
-                height: 170,
-                child: PageView.builder(
-                    itemCount: 5,
-                    controller: PageController(/*viewportFraction: 0.9*/),
-                    onPageChanged: (int index) => setState(() =>  idx = index ),
-                    itemBuilder: (_,i){
 
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 7),
 
-                        child: Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
-                          ),
-                          child: Container(
-                            width: 50,
-                            height: 50,
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(Radius.circular(5)),
-                              // boxShadow: <BoxShadow>[
-                              //   BoxShadow(
-                              //       color: Colors.black,
-                              //       offset: Offset(0, 4),
-                              //       blurRadius: 10,
-                              //       spreadRadius: 2)
-                              // ],
-                              // border: Border.all(color: Colors.grey, width: 2),
-                              image: DecorationImage(
-                                image: AssetImage("assets/images/darkblue.jpg"),
-                                fit: BoxFit.cover,
+
+          return Stack(
+
+          children: <Widget> [
+            background(),
+
+            Column(
+
+              // shrinkWrap: true,
+              children: [
+
+
+                  // SizedBox(
+                  //   height: 250,
+                  // ),
+                SizedBox(
+                  height: 170,
+                  child: PageView.builder(
+                      itemCount: 5,
+                      controller: PageController(/*viewportFraction: 0.9*/),
+                      onPageChanged: (int index) => setState(() =>  idx = index ),
+                      itemBuilder: (_,i){
+
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 7),
+
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5)),
+                            ),
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(5)),
+                                // boxShadow: <BoxShadow>[
+                                //   BoxShadow(
+                                //       color: Colors.black,
+                                //       offset: Offset(0, 4),
+                                //       blurRadius: 10,
+                                //       spreadRadius: 2)
+                                // ],
+                                // border: Border.all(color: Colors.grey, width: 2),
+                                image: DecorationImage(
+                                  image: AssetImage("assets/images/darkblue.jpg"),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              child: Text(
+                                "OFERTA ${i+1}",
+                                style: TextStyle(fontSize: 20, color: Colors.white),
+
+
+
+
+                                //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+
+
+
                               ),
                             ),
-                            child: Text(
-                              "OFERTA ${i+1}",
-                              style: TextStyle(fontSize: 20, color: Colors.white),
-
-
-
-
-                              //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
-
-
-
-                            ),
                           ),
-                        ),
 
 
-                      );
+                        );
 
 
 
 
-                    }
+                      }
+                  ),
+                  // child:
                 ),
-                // child:
+
+
+                  SizedBox(
+                    height: 40,
+
+                  ),
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').snapshots(),
+                    builder: (context, snapshot1){
+
+
+
+                            if(!snapshot1.hasData) return LinearProgressIndicator();
+                            return Expanded(child: buildListRec(snapshot1.data, snapshot2.data, user.uid));
+                          }
+                      ),
+                      // gustosVerify(context);
+                      // if(!snapshot.hasData) return LinearProgressIndicator();
+                      // return Expanded(child: buildListRec(snapshot.data));
+
+
+                  // new Expanded(
+                  //   child:
+                  //   ListView.builder(
+                  //     shrinkWrap: true,
+                  //     itemCount: empresas.length,
+                  //     physics: ScrollPhysics(),
+                  //     itemBuilder: (BuildContext context, int index){
+                  //
+                  //       return recommendEmpresa(empresas[index], context);
+                  //     },
+                  //     // crossAxisAlignment: CrossAxisAlignment.center,
+                  //     // mainAxisAlignment: MainAxisAlignment.center,
+                  //
+                  //
+                  //   ),
+                  // ),
+                  // ),
+                  // ),
+                  // ),
+
+                  // ),
+
+                ],
               ),
-
-
-                SizedBox(
-                  height: 40,
-
-                ),
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').snapshots(),
-                  builder: (context, snapshot1){
-                    return StreamBuilder(
-                        stream: FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('gustos').snapshots(),
-                        builder: (context, snapshot2){
-                          if(!snapshot1.hasData) return LinearProgressIndicator();
-                          return Expanded(child: buildListRec(snapshot1.data, snapshot2.data, user.uid));
-                        }
-                    );
-                    // gustosVerify(context);
-                    // if(!snapshot.hasData) return LinearProgressIndicator();
-                    // return Expanded(child: buildListRec(snapshot.data));
-                  },
-                ),
-                // new Expanded(
-                //   child:
-                //   ListView.builder(
-                //     shrinkWrap: true,
-                //     itemCount: empresas.length,
-                //     physics: ScrollPhysics(),
-                //     itemBuilder: (BuildContext context, int index){
-                //
-                //       return recommendEmpresa(empresas[index], context);
-                //     },
-                //     // crossAxisAlignment: CrossAxisAlignment.center,
-                //     // mainAxisAlignment: MainAxisAlignment.center,
-                //
-                //
-                //   ),
-                // ),
-                // ),
-                // ),
-                // ),
-
-                // ),
-
-              ],
-            ),
           // ),
 
 
@@ -641,6 +702,7 @@ class MainMenuState extends State<MainMenu>{
           ],
           // child: Image.asset("assets/images/background.png"),
 
+          );}
         ),
 
       );
