@@ -67,7 +67,7 @@ class ListaGustosState extends State<ListaGustos> {
       onPressed: () async {
 
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => GustosUsuario(title: '', /*uid: uid*/)));
+                context, MaterialPageRoute(builder: (context) => GustosUsuario( /*uid: uid*/)));
 
       },
     );

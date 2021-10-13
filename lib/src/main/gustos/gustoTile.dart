@@ -5,15 +5,22 @@ import 'package:cliente/src/main/gustos/listaGustos.dart';
 import 'package:cliente/src/main/gustos/verGustos.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/main/gustos/gustos.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:multi_select_flutter/chip_field/multi_select_chip_field.dart';
+import 'package:multi_select_flutter/util/multi_select_item.dart';
+
+import 'gustosMenu.dart';
 
 class GustoTile extends StatefulWidget {
-  GustoTile({this.gusto, this.uid});
+  GustoTile({this.uid, this.list, this.totalGustos});
 
-  final String gusto;
+
   final String uid;
-
+  final List<String> list;
+  final List<dynamic> totalGustos;
 
 
   @override
@@ -21,67 +28,180 @@ class GustoTile extends StatefulWidget {
 
 }
 
-class GustoTileState extends State<GustoTile>{
+class GustoTileState extends State<GustoTile> {
 
-  String uid;
-  String gusto;
+  bool selectGustos = false;
+  String user;
+
+  static List<String> finalTagList = [];
+  List<String> selectedTags = [];
+  var userGustos = [];
+
 
   @override
   void initState(){
-    uid = widget.uid;
-    gusto = widget.gusto;
+    user = widget.uid;
+    userGustos = widget.totalGustos;
+    finalTagList = widget.list;
     super.initState();
   }
 
-
+  // fetchGustos() async {
+  //   List listaEmpresas = await FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').get().then((value) => value.docs);
+  //   for(int i=0;i<listaEmpresas.length;i++){
+  //     FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("empresa").doc(
+  //         listaEmpresas[i].id.toString()
+  //     ).collection("etiquetas").snapshots().listen((CreateListTags));
+  //   }
+  // }
+  //
+  // CreateListTags(QuerySnapshot snapshot) async{
+  //   var docs = snapshot.docs;
+  //   for(var doc in docs){
+  //     finalTagList.add(doc.get("etiquetas"));
+  //   }
+  //
+  //   print("tags ${finalTagList}");
+  // }
+  //
 
   @override
   Widget build(BuildContext context){
 
+    var totalGustos = userGustos.toSet().toList();
 
-    RegExp expGusto = new RegExp(r"({gusto: )|(\,(.*))");
-    RegExp expID = new RegExp(r"(\{(.*)(docID: ))|(})");
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').snapshots(),
-        builder: (context, snapshot){
+    var text = "";
 
-          return new Padding(
-            padding: EdgeInsets.only(top: 8.0),
-            child: Card(
-              margin: EdgeInsets.fromLTRB(20.0, 6.0, 20.0, 0.0),
-              child: ListTile(
-                // leading: CircleAvatar(
-                //   radius: 25.0,
-                //   backgroundColor: Colors.grey.shade50,
-                // ),
-                title: Text(gusto.replaceAll(expGusto,''), textAlign: TextAlign.center,),
-                trailing: InkWell(
-                  child: Icon(Icons.delete_forever_sharp, color: Colors.redAccent,),
-                  onTap: () async {
-                      // FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').doc(gusto.replaceAll(expID, '')).delete();
-                   FirebaseFirestore.instance.collection('usuario').doc(uid).collection('gustos').doc(gusto.replaceAll(expID, '')).delete().then((value){
-                    print(gusto.replaceAll(expID, ''));
-                    print("Success!");
-                  });
-                   setState(() {
-                     // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerGustos()));
-                   });
+    // fetchGustos();
+    var gridList = finalTagList.toSet().toList();
 
-              }),
+    final items = gridList.map((e) => MultiSelectItem(e, e)).toList();
 
+    return Scaffold(
+      backgroundColor: Colors.black.withOpacity(0.3),
 
-                  //
-                  // onPressed: (){
-                  //
-                  // },
+      body: AnimatedSwitcher(
+            duration: const Duration(seconds: 3),
+            transitionBuilder: (child, animation) {
+
+            return ScaleTransition(
+              scale: animation,
+              child: child,
+            );
+            },
+            child: Stack(
+
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: <Widget>[
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    SizedBox(
+                      height: 100,
+
+                    ),
+                    MultiSelectChipField(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: Color(0xff108aa6), width: 1.8),
+                        color: Color(0xefdae3f7),
+                      ),
+                      items: items,
+                      title: Text("Seleccionar 3 gustos iniciales :", style:TextStyle(color: Colors.white, fontSize: 20),),
+                      headerColor: Color(0xff108aa6),
+                      textStyle: GoogleFonts.montserrat(textStyle: TextStyle(color: Colors.white)),
+                      chipColor: Color(0xff6c80a3),
+                      chipShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      selectedChipColor: Color(0xcf008da6),
+                      selectedTextStyle: GoogleFonts.montserrat(textStyle: TextStyle(color: Colors.white)),
+                      onTap: (values){
+                        selectedTags = values;
+                        print(values);
+                      },
+
+                    ),
+                    // Container(
+                    //   height: 300,
+                    //   padding: EdgeInsets.symmetric(vertical: 50),
+                    //   child: Align(
+                    //     alignment: Alignment.center,
+                    //     child:
+                    //   ),
+                    //
+                    //
+                    // ),
+                    ElevatedButton(
+                      onPressed: (){
+                        print(totalGustos);
+                        int i = 0;
+                        // while(i<totalGustos.length){
+                        //
+                        //     if(selectedTags.contains(totalGustos[i])){
+                        //       selectGustos = false;
+                        //       ScaffoldMessenger
+                        //           .of(context)
+                        //           .showSnackBar(
+                        //           SnackBar(
+                        //               content: Text(
+                        //                   'Seleccionar gustos nuevos')));
+                        //       i++;
+                        //     }else{
+                        //       selectGustos=true;
+                        //     }
+                        //   }
+                        if(selectedTags.length<1){
+                          selectGustos = false;
+                          ScaffoldMessenger
+                              .of(context)
+                              .showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Seleccionar por lo menos 1 gusto')));
+                        }else if(selectedTags.length>=1){
+                          selectedTags.forEach((element) {
+                            DatabaseConnect(uid: user).agregarGustos(element);
+                          });
+                          setState(() {
+                            Navigator.pop(context);
+                            // Navigator.of(context).popUntil((route) {
+                            //   return route.settings.name ==
+                            //       'mainMenu';
+                            // });
+
+                            // Navigator.push(context, MaterialPageRoute(builder: (context) => GustosMenu()));
+                          });
+                          // Future.delayed(Duration.zero,(){
+                          //   Navigator.push(context, MaterialPageRoute(builder: (context) => GustosMenu()));
+                          //
+                          // });
+
+                        }
+                      },
+                      child: Text("agregar"),
+                    ),
+                    Text(text, style: TextStyle(color: Colors.red, fontSize: 14)),
+
+                  ],
                 ),
 
-              ),
-            );
 
-        }
+
+
+              ],
+            ),
+          ),
+
+
 
     );
+
+
 
 
   }

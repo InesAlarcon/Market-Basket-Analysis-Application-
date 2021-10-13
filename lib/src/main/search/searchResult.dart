@@ -3,6 +3,7 @@
 import 'package:cliente/src/main/negocio/negocioPage.dart';
 import 'package:cliente/src/main/suscripciones/ratingSub.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
+import 'package:cliente/src/services/searchService.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -26,7 +27,7 @@ class EmpresaSus {
   String name;
   double rating;
   String id;
-  int vote;
+  bool vote;
 
   EmpresaSus(
       this.name,
@@ -96,10 +97,29 @@ Widget SearchResultGusto(DocumentSnapshot snapshot){
 
 
 Widget SearchResultSus(DocumentSnapshot snapshot, context){
+
+  var pageData = [];
+
+  // initPage(String pageid){
+  //   SearchService().searchByID(pageid).then((QuerySnapshot docs){
+  //     pageData = docs.docs.map((e) => {
+  //       "id": e.id,
+  //       "nombre": e.get("nombre"),
+  //       "defaultRating": e.get("defaultRating"),
+  //       "voteCount": e.get("voteCount"),
+  //     }).toList();
+  //     print("PageDATA ${pageData}");
+  //   });
+  // }
+
   final user = Provider.of<Usuario>(context);
   final empresa = EmpresaSus.fromSnapshot(snapshot);
   print(empresa.name);
   print(empresa.id);
+  print(empresa.vote);
+  bool test = true;
+
+  // initPage(empresa.id);
 
   double empRate = empresa.rating;
 
@@ -163,28 +183,160 @@ Widget SearchResultSus(DocumentSnapshot snapshot, context){
               SizedBox(
                 height: 5,
               ),
+
               SizedBox(
                 height: 60,
-                width: 120,
-                child: Card(
-                  // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                  color: Colors.orange.shade300,
-                  // child: Center(
-                  child: ListTile(
-                    title: Align(
-                      alignment: Alignment.center,
-                      child: Text('Calificar', style: TextStyle( fontSize: 20),textAlign: TextAlign.center),),
-                    onTap: () async {
-                      final int vote = empresa.vote+1;
+                width: 60,
+                child: IconButton(
+
+                  onPressed: (){
+                    if(empresa.vote){
+                      showDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              elevation: 24,
+                              title: Text(
+                                  "¿Quieres quitar tu calificación?"
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(
+                                        context);
+                                  },
+                                  child: Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    bool vote = false;
+                                    DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, 0.0, vote);
+                                    BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+                                    Navigator.pop(
+                                        context);
+                                    ScaffoldMessenger
+                                        .of(context)
+                                        .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Calificación a ${empresa.name} Eliminada')));
+                                  },
+                                  child: Text("Si"),
+                                ),
+
+                              ],
+                            );
+                          }
+                      );
+                    }
+                    else{
+                      bool vote = true;
+
+
                       // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
-                      DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, empRate);
+                      DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, empRate, vote);
+                      BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
                       // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
                       ScaffoldMessenger.of(context)
                           .showSnackBar(SnackBar(content: Text('Calificación de ${empresa.name} modificada')));
-                    },
-                  ),
-                ) ,
-              ),
+                    }
+                  },
+
+                  iconSize: 20,
+                  icon: Icon(empresa.vote
+                      ? Icons.check_rounded
+                      : Icons.add),
+                  color: Color(0xff108aa6),
+                ),
+              )
+
+              // if (!empresa.vote) SizedBox(
+              //   height: 60,
+              //   width: 120,
+              //   child: Card(
+              //     // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+              //     color: Colors.orange.shade300,
+              //     // child: Center(
+              //     child: ListTile(
+              //       title: Align(
+              //         alignment: Alignment.center,
+              //         child: Text('Calificar', style: TextStyle( fontSize: 20),textAlign: TextAlign.center),),
+              //       onTap: () async {
+              //         bool vote = true;
+              //
+              //         // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
+              //         DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, empRate, vote);
+              //         BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+              //         // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+              //         ScaffoldMessenger.of(context)
+              //             .showSnackBar(SnackBar(content: Text('Calificación de ${empresa.name} modificada')));
+              //       },
+              //     ),
+              //   )
+              // )
+              // else SizedBox(
+              // height: 60,
+              // width: 120,
+              //   child: Card(
+              //     // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+              //     color: Colors.redAccent,
+              //     // child: Center(
+              //     child: ListTile(
+              //       title: Align(
+              //         alignment: Alignment.center,
+              //         child: Text('Quitar Calificación', style: TextStyle( fontSize: 15),textAlign: TextAlign.center),),
+              //       onTap: () async {
+              //         showDialog(
+              //             barrierDismissible: true,
+              //             context: context,
+              //             builder: (context) {
+              //               return AlertDialog(
+              //                 elevation: 24,
+              //                 title: Text(
+              //                     "¿Quieres quitar tu calificación?"
+              //                 ),
+              //                 actions: [
+              //                   TextButton(
+              //                     onPressed: () {
+              //                       Navigator.pop(
+              //                           context);
+              //                     },
+              //                     child: Text("No"),
+              //                   ),
+              //                   TextButton(
+              //                     onPressed: () {
+              //                       bool vote = false;
+              //                       DatabaseConnect(uid: user.uid).ratingSubs(empresa.name, 0.0, vote);
+              //                       BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+              //                       Navigator.pop(
+              //                           context);
+              //                       ScaffoldMessenger
+              //                           .of(context)
+              //                           .showSnackBar(
+              //                           SnackBar(
+              //                               content: Text(
+              //                                   'Calificación a ${empresa.name} Eliminada')));
+              //                     },
+              //                     child: Text("Si"),
+              //                   ),
+              //
+              //                 ],
+              //               );
+              //             }
+              //         );
+              //
+              //         // bool vote = false;
+              //         // // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
+              //         //
+              //         // // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+              //         // ScaffoldMessenger.of(context)
+              //         //     .showSnackBar(SnackBar(content: Text('Calificación de ${empresa.name} modificada')));
+              //       },
+              //     ),
+              //   )
+              // ),
+
             ],
         ),
 

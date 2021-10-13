@@ -1,11 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mbasuscriber.clientapp">
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
    <application
         android:label="cliente"
         android:icon="@mipmap/ic_launcher">
 
        <meta-data android:name="com.google.android.geo.API_KEY"
                   android:value="AIzaSyAwlU4r4X9xd5NInx-jm3HQiq0vQrmxJB4"/>
+
 
         <activity
             android:name=".MainActivity"
@@ -45,4 +53,5 @@
 
 
     </application>
+
 </manifest>

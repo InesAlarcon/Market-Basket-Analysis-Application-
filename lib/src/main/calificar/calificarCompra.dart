@@ -10,8 +10,8 @@ import 'package:cliente/src/main/gustos/listaGustos.dart';
 import 'package:cliente/src/main/gustos/gustos.dart';
 import 'package:cliente/src/usuario.dart';
 
-class AgregarGusto extends StatefulWidget{
-  AgregarGusto({Key key, this.title, this.uid}) : super(key: key);
+class CalificarCompra extends StatefulWidget{
+  CalificarCompra({Key key, this.title, this.uid}) : super(key: key);
 
   final String title;
   final String uid;
@@ -19,10 +19,10 @@ class AgregarGusto extends StatefulWidget{
 
 
   @override
-  AgregarGustoState createState() => AgregarGustoState();
+  CalificarCompraState createState() => CalificarCompraState();
 }
 
-class AgregarGustoState extends State<AgregarGusto>{
+class CalificarCompraState extends State<CalificarCompra>{
 
 
 
@@ -37,7 +37,7 @@ class AgregarGustoState extends State<AgregarGusto>{
 
     // FirestoreStart().connectFS2();
 
-    print("USER "+user);
+    // print("USER "+user);
     return ElevatedButton(
       child: Container(
         height: 60,
@@ -53,7 +53,7 @@ class AgregarGustoState extends State<AgregarGusto>{
         child: Column(
           children: <Widget>[
             Text(
-              'guardar',
+              'buscar',
               style: TextStyle(fontSize: 20, color: Colors.white),
             ),
           ],
@@ -61,12 +61,12 @@ class AgregarGustoState extends State<AgregarGusto>{
       ),
       onPressed: () async {
         try{
-          print("USER "+user);
-          BusinessDatabaseConnect().getOfertas();
+          // print("USER "+user);
+          // BusinessDatabaseConnect().getOfertas();
 
           // BusinessDatabaseConnect().agregarEmpresa(gustosController.text);
-          DatabaseConnect(uid: user).agregarGustos(gustosController.text);
-          Navigator.push(context, MaterialPageRoute(builder: (context) => VerGustos( /*uid: uid*/)));
+          // DatabaseConnect(uid: user).agregarGustos(gustosController.text);
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => VerGustos( /*uid: uid*/)));
           }catch(e){
           print(e.toString());
           return null;
@@ -127,7 +127,7 @@ class AgregarGustoState extends State<AgregarGusto>{
                     // ),
                   ),
                   Text(
-                    "GUSTO",
+                    "No. de Factura",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, color: Color(0xff05668D)),
 
                     // textAlign: TextAlign.center,
@@ -147,12 +147,12 @@ class AgregarGustoState extends State<AgregarGusto>{
                       textAlign: TextAlign.center,
                       obscureText: false,
                       decoration: InputDecoration(
-                          contentPadding: new EdgeInsets.symmetric(vertical: 30, horizontal: 15),
+                          contentPadding: new EdgeInsets.symmetric(vertical: 20, horizontal: 15),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           fillColor: Color(0xffd9d9d9),
                           filled: true)
                   ),
-                  SizedBox(height: 20,),
+                  SizedBox(height: 10,),
 
 
                   saveGusto(user.uid),

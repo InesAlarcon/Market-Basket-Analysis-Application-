@@ -142,12 +142,12 @@ class DatabaseConnect {
   }
 
   Future agregarSuscripcion(String sus, double rating, int vote, String id) async {
-    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(id);
     return ref.set({
       'id': id,
       'empresa': sus,
       'rating': rating,
-      'voteCount': vote,
+      'voteCount': false,
     });
   }
   Future quitarSuscripcion(String sus, double rating, int vote, String id) async {
@@ -160,10 +160,25 @@ class DatabaseConnect {
     });
   }
 
-  Future ratingSubs(String sus, double rating) async {
-    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
-    return ref.update({
+  Future ratingSubs(String sus, double rating, bool vote) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ratings').doc(sus);
+    return ref.set({
       'rating': rating,
+      'voteCount': vote,
+    });
+  }
+
+
+  Future likeOferta(String id) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id);
+    return ref.set({
+      'ofertaID': id,
+    });
+  }
+  Future quitarOferta(String id) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id);
+    return ref.set({
+      'ofertaID': id,
     });
   }
 
@@ -235,6 +250,15 @@ class DatabaseConnect {
 class BusinessDatabaseConnect{
 
   FirebaseApp businessApp = Firebase.app('businessApp');
+  
+  Future<List> getAllTags(empID) async{
+    print(empID);
+    QuerySnapshot query = await FirebaseFirestore.instanceFor(app: businessApp).collection("empresa").doc(empID).collection("etiquetas").get();
+    final allTags = query.docs.map((e) => e.get("etiquetas")).toList();
+    // print(allTags);
+    return allTags;
+    
+  }
 
   Future<List> getOfertas() async{
     // FirebaseApp businessApp = Firebase.app('businessApp');
@@ -271,6 +295,7 @@ class BusinessDatabaseConnect{
   }
 
   Future voteEmpresa(String docId, bool voteVal) async{
+
     int vote=0;
     
     var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
@@ -291,6 +316,61 @@ class BusinessDatabaseConnect{
 
     return ref.update({
       'voteCount': vote,
+
+    });
+  }
+
+  Future rateEmpresa(String docId, bool voteVal, double rate) async{
+
+    double vote=0;
+
+    var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
+    var query= await FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId).get();
+
+    var data = query.data();
+    print(data['defaultRating']);
+
+    if(voteVal){
+      vote = ((data['defaultRating']*(data["voteCount"]-1))+rate)/data['voteCount'];
+
+
+    }else if(!voteVal){
+      if((data["voteCount"]-1)==0){
+        vote = 0;
+      }else{
+        vote = ((data['defaultRating']*(data['voteCount']))-rate)/(data["voteCount"]-1);
+      }
+    }
+
+
+
+    return ref.update({
+      'defaultRating': vote,
+
+    });
+  }
+
+  Future likeOferta(String docId, String ofId, bool voteVal) async{
+    int vote=0;
+
+    var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').doc(docId).collection("ofertas").doc(ofId);
+    var query= await FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').doc(docId).collection("ofertas").doc(ofId).get();
+
+    var data = query.data();
+    print(data['votos']);
+
+    if(voteVal){
+      vote = data['votos']+1;
+
+
+    }else{
+      vote = data['votos']-1;
+    }
+
+
+
+    return ref.update({
+      'votos': vote,
 
     });
   }

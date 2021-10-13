@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-import 'package:cliente/src/main/gustos/agregarGusto.dart';
+import 'package:cliente/src/main/calificar/calificarCompra.dart';
 import 'package:cliente/src/main/gustos/verGustos.dart';
 import 'package:cliente/src/main/gustos/gustosMenu.dart';
 import 'package:cliente/src/services/databaseFirebase.dart';
