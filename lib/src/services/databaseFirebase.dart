@@ -86,7 +86,7 @@ class AuthServices{
       UserCredential authUser = await auth.createUserWithEmailAndPassword( email: email, password: pass);
       User user = authUser.user;
       
-      await DatabaseConnect(uid: user.uid).agregarGustos('sin gustos');
+      // await DatabaseConnect(uid: user.uid).agregarGustos('sin gustos');
       await DatabaseConnect(uid: user.uid).agregarUserInfo(usuario);
 
       return firebaseUser(user);
@@ -128,8 +128,10 @@ class DatabaseConnect {
 
   Future agregarUserInfo(String username) async{
 
-    return FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('infoUsuario').doc('username').set({
+    // return FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('infoUsuario').doc('username').set({
+    return FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).set({
       'username': username,
+      'token': "",
     });
   }
 
@@ -148,6 +150,7 @@ class DatabaseConnect {
       'empresa': sus,
       'rating': rating,
       'voteCount': false,
+      'notifs': true,
     });
   }
   Future quitarSuscripcion(String sus, double rating, int vote, String id) async {
@@ -157,6 +160,14 @@ class DatabaseConnect {
       'empresa': sus,
       'rating': rating,
       'voteCount': vote,
+      'notifs': false,
+    });
+  }
+
+  Future modificarNotificacion(String sus, bool notifs) async {
+    final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('suscripciones').doc(sus);
+    return ref.update({
+      'notifs': notifs,
     });
   }
 
@@ -169,12 +180,66 @@ class DatabaseConnect {
   }
 
 
-  Future likeOferta(String id) async {
+  Future likeOferta(String id, bool like, bool estado, bool used, int limit) async {
     final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id);
-    return ref.set({
-      'ofertaID': id,
+    // var query= await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id).get();
+
+    var ret;
+    ref.get().then((snap) => {
+
+      if(snap.exists){
+        if(estado){
+          if(used){
+            if(!(snap.get('limite')==0)){
+              ret = ref.update({
+                'limite': snap.get('limite')-1,
+              })
+            }else{
+              ret = ref.update({
+                'estado': false,
+              })
+            }
+          },
+          if(!like){
+            ret = ref.update({
+              'like': like,
+            }),
+          }else{
+            ret = ref.update({
+              'like': like,
+            }),
+          }
+
+        }else{
+          ret = ref.update({
+            'estado': false,
+          })
+        }
+      }else{
+        if(used){
+          ret = ref.set({
+            'like':true,
+            'ofertaID': id,
+            'estado': estado,
+            'limite': limit-1,
+          })
+        }else{
+          ret = ref.set({
+            'like':true,
+            'ofertaID': id,
+            'estado': estado,
+            'limite': limit,
+          })
+        }
+
+      }
+
     });
+
+    return ret;
+
   }
+
   Future quitarOferta(String id) async {
     final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id);
     return ref.set({
@@ -320,6 +385,32 @@ class BusinessDatabaseConnect{
     });
   }
 
+  Future subEmpresa(String docId, bool voteVal) async{
+
+    int vote=0;
+
+    var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId);
+    var query= await FirebaseFirestore.instanceFor(app: businessApp).collection('empresa').doc(docId).get();
+
+    var data = query.data();
+    print(data['subCount']);
+
+    if(voteVal){
+      vote = data['subCount']+1;
+
+
+    }else{
+      vote = data['subCount']-1;
+    }
+
+
+
+    return ref.update({
+      'subCount': vote,
+
+    });
+  }
+
   Future rateEmpresa(String docId, bool voteVal, double rate) async{
 
     double vote=0;
@@ -371,6 +462,37 @@ class BusinessDatabaseConnect{
 
     return ref.update({
       'votos': vote,
+
+    });
+  }
+  Future useOferta(String docId, String ofId, bool voteVal) async{
+    int vote=0;
+    var value;
+    double totalsold = 0.0;
+
+    var ref = FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').doc(docId).collection("ofertas").doc(ofId);
+    var query= await FirebaseFirestore.instanceFor(app: businessApp).collection('ofertas').doc(docId).collection("ofertas").doc(ofId).get();
+
+    var data = query.data();
+    print(data['totalCount']);
+
+    if(voteVal){
+      vote = data['totalCount']+1;
+      value = data['valor']+0.0;
+      // value = int.parse(data['valor'])+0.0;
+      totalsold = vote*value;
+
+
+    }else{
+      vote = data['totalCount'];
+    }
+
+
+
+    return ref.update({
+      'totalCount': vote,
+      'totalSold': totalsold,
+
 
     });
   }

@@ -20,6 +20,7 @@ void lista(){
     FirebaseApp businessApp = await Firebase.initializeApp(
         name: 'businessApp',
         options: const FirebaseOptions(
+
             apiKey: 'AIzaSyDpWAq4leLiDPXbVuZKqV4W6NgzW17QxAw',
             appId: '1:389302464783:android:b5fb812aff204c3d614e7a',
             messagingSenderId: '127761987180',

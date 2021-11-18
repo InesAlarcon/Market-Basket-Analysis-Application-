@@ -59,12 +59,12 @@ class LoginFormState extends State<LoginForm>{
             textStyle: Theme.of(context).textTheme.headline4,
             fontSize: 50,
             fontWeight: FontWeight.w700,
-            color: Color(0xffd1d765),
+            color: Color(0xffFFC75F),
           ),
           children: [
             TextSpan(
               text: 'PLUS',
-              style: TextStyle(color: Color(0xff05668D), fontSize: 50),
+              style: TextStyle(color: Color(0xffFFFFFF), fontSize: 50),
             ),
           ]),
     );
@@ -80,10 +80,30 @@ class LoginFormState extends State<LoginForm>{
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            "Email",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          Stack(
+            children: <Widget>[
+              // Stroked text as border.
+              Text(
+                'Email',
+                style: TextStyle(
+                  fontSize: 20,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2
+                    ..color = Colors.black54,
+                ),
+              ),
+              // Solid text as fill.
+              Text(
+                'Email',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
+
           SizedBox(
             height: 10,
           ),
@@ -95,16 +115,38 @@ class LoginFormState extends State<LoginForm>{
               },
               obscureText: false,
               decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: Color(0xffd9d9d9),
+                  border: UnderlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(5))
+                  ),
+                  fillColor: Color(0xffFBEAFF),
                   filled: true)),
-          Text(
-            "Contraseña",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          Stack(
+            children: <Widget>[
+              // Stroked text as border.
+              Text(
+                'Contraseña',
+                style: TextStyle(
+                  fontSize: 20,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2
+                    ..color = Colors.black54,
+                ),
+              ),
+              // Solid text as fill.
+              Text(
+                'Contraseña',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
           SizedBox(
             height: 10,
           ),
+
           TextFormField(
 
               validator: (val) => val!.length < 8 ? 'La contraseña tiene que contener 8 o más caracteres' : null,
@@ -114,8 +156,10 @@ class LoginFormState extends State<LoginForm>{
               },
               obscureText: true,
               decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: Color(0xffd9d9d9),
+                  border: UnderlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(5))
+                  ),
+                  fillColor: Color(0xffFBEAFF),
                   filled: true)),
         ],
       ),
@@ -140,18 +184,21 @@ class LoginFormState extends State<LoginForm>{
     return Column(
       children: <Widget>[
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            primary: Colors.transparent,
+            side: BorderSide(
+              width: 2,
+              color: Colors.white,
+            ),
+          ),
         child: Container(
           width: MediaQuery.of(context).size.width,
           padding: EdgeInsets.symmetric(vertical: 15),
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-              gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Color(0xff6D597A), Color(0xff355070)])),
+
           child: Column(
             children: <Widget>[
+
               Text(
                 'Login',
                 style: TextStyle(fontSize: 20, color: Colors.white),
@@ -297,9 +344,9 @@ class LoginFormState extends State<LoginForm>{
             Text(
               'Registrar',
               style: TextStyle(
-                  color: Color(0xff6D597A),
+                  color: Color(0xffc4a9d6),
                   fontSize: 13,
-                  fontWeight: FontWeight.w600),
+                  fontWeight: FontWeight.w200),
             ),
           ],
         ),
@@ -311,9 +358,16 @@ class LoginFormState extends State<LoginForm>{
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    return Scaffold(
-      backgroundColor: Colors.white,
-        body: Container(
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xff81d8fc), Color(0xff2C73D2)])
+      ),
+      child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Container(
           height: height,
           //
           // decoration: BoxDecoration(
@@ -368,7 +422,7 @@ class LoginFormState extends State<LoginForm>{
             ],
           ),
         ),
-    );
+    ),);
   }
 
 }

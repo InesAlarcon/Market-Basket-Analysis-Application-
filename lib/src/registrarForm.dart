@@ -61,12 +61,12 @@ class RegistrarFormState extends State<RegistrarForm>{
             textStyle: Theme.of(context).textTheme.headline4,
             fontSize: 50,
             fontWeight: FontWeight.w700,
-            color: Color(0xffd1d765),
+            color: Color(0xffFFC75F),
           ),
           children: [
             TextSpan(
               text: 'PLUS',
-              style: TextStyle(color: Color(0xff05668D), fontSize: 50),
+              style: TextStyle(color: Color(0xffffffff), fontSize: 50),
             ),
           ]),
     );
@@ -112,10 +112,33 @@ class RegistrarFormState extends State<RegistrarForm>{
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    "Usuario",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  Stack(
+                    children: <Widget>[
+                      // Stroked text as border.
+                      Text(
+                        'Usuario',
+                        style: TextStyle(
+                          fontSize: 20,
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 2
+                            ..color = Colors.black54,
+                        ),
+                      ),
+                      // Solid text as fill.
+                      Text(
+                        'Usuario',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
+                  // Text(
+                  //   "Usuario",
+                  //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+                  // ),
                   SizedBox(
                     height: 10,
                   ),
@@ -128,13 +151,38 @@ class RegistrarFormState extends State<RegistrarForm>{
                       controller: userController,
                       obscureText: false,
                       decoration: InputDecoration(
-                          border: InputBorder.none,
-                          fillColor: Color(0xffd9d9d9),
+                          border: UnderlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          fillColor: Color(0xffFBEAFF),
                           filled: true)),
-                  Text(
-                    "Email",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  Stack(
+                    children: <Widget>[
+                      // Stroked text as border.
+                      Text(
+                        'Email',
+                        style: TextStyle(
+                          fontSize: 20,
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 2
+                            ..color = Colors.black54,
+                        ),
+                      ),
+                      // Solid text as fill.
+                      Text(
+                        'Email',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
+                  // Text(
+                  //   "Email",
+                  //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+                  // ),
                   SizedBox(
                     height: 10,
                   ),
@@ -146,13 +194,38 @@ class RegistrarFormState extends State<RegistrarForm>{
                       controller: emailController,
                       obscureText: false,
                       decoration: InputDecoration(
-                          border: InputBorder.none,
-                          fillColor: Color(0xffd9d9d9),
+                          border: UnderlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          fillColor: Color(0xffFBEAFF),
                           filled: true)),
-                  Text(
-                    "Contraseña",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  Stack(
+                    children: <Widget>[
+                      // Stroked text as border.
+                      Text(
+                        'Contraseña',
+                        style: TextStyle(
+                          fontSize: 20,
+                          foreground: Paint()
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 2
+                            ..color = Colors.black54,
+                        ),
+                      ),
+                      // Solid text as fill.
+                      Text(
+                        'Contraseña',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
+                  // Text(
+                  //   "Contraseña",
+                  //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+                  // ),
                   SizedBox(
                     height: 10,
                   ),
@@ -166,21 +239,25 @@ class RegistrarFormState extends State<RegistrarForm>{
                       controller: passController,
                       obscureText: true,
                       decoration: InputDecoration(
-                          border: InputBorder.none,
-                          fillColor: Color(0xffd9d9d9),
+                          
+                          border: UnderlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          fillColor: Color(0xffFBEAFF),
                           filled: true)),
                   SizedBox(height: height * .10),
                   ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.transparent,
+                        side: BorderSide(
+                          width: 2,
+                          color: Colors.white,
+                        ),
+                      ),
                       child: Container(
                         width: MediaQuery.of(context).size.width,
                         padding: EdgeInsets.symmetric(vertical: 15),
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(5)),
-                            gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [Color(0xff6D597A), Color(0xff355070)])),
                         child: Text(
                           'Registrarse',
                           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -262,7 +339,7 @@ class RegistrarFormState extends State<RegistrarForm>{
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Ya tienes cuenta ?',
+              'Ya tienes cuenta?',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             SizedBox(
@@ -271,9 +348,9 @@ class RegistrarFormState extends State<RegistrarForm>{
             Text(
               'Login',
               style: TextStyle(
-                  color: Color(0xff6D597A),
+                  color: Color(0xffc4a9d6),
                   fontSize: 13,
-                  fontWeight: FontWeight.w600),
+                  fontWeight: FontWeight.w200),
             ),
           ],
         ),
@@ -286,41 +363,49 @@ class RegistrarFormState extends State<RegistrarForm>{
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xff81d8fc), Color(0xff2C73D2)])
+        ),
+        child: Scaffold(
+    backgroundColor: Colors.transparent,
 
-      body: Container(
-        height: height,
-        child: Stack(
-          children: <Widget>[
+    body: Container(
+    height: height,
+      child: Stack(
+        children: <Widget>[
 
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    SizedBox(height: height * .2),
-                    titulo(),
-                    SizedBox(
-                      height: 50,
-                    ),
-                    emailPassword(),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    // registrarBoton(),
-                    // SizedBox(height: height * .14),
-                    loginFormBoton(),
-                  ],
-                ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(height: height * .2),
+                  titulo(),
+                  SizedBox(
+                    height: 50,
+                  ),
+                  emailPassword(),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  // registrarBoton(),
+                  // SizedBox(height: height * .14),
+                  loginFormBoton(),
+                ],
               ),
             ),
-            Positioned(top: 40, left: 0, child: regresarBoton()),
-          ],
-        ),
+          ),
+          Positioned(top: 40, left: 0, child: regresarBoton()),
+        ],
       ),
+    ),
+    ),
     );
   }
 

@@ -2,6 +2,10 @@
 
 import 'dart:async';
 import 'dart:math' as math; // import this
+import 'dart:typed_data';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:infinity_page_view/infinity_page_view.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:cliente/src/main/gustoAdder.dart';
@@ -30,6 +34,8 @@ import 'package:provider/provider.dart';
 import 'package:cliente/src/usuario.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../main.dart';
+
 
 class MainMenu extends StatefulWidget {
 MainMenu({Key key, this.title, /*required this.uid*/}) : super(key: key);
@@ -41,13 +47,31 @@ MainMenu({Key key, this.title, /*required this.uid*/}) : super(key: key);
 MainMenuState createState() => MainMenuState();
 }
 
-class MainMenuState extends State<MainMenu>{
+class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
+  getToken(String user) async {
+    String token = await FirebaseMessaging.instance.getToken();
+    print(token);
+
+    if(token!=null){
+      var tokenRef = FirebaseFirestore.instance.collection("usuario").doc(user).update(
+          {
+            'token': token,
+          });
+    }
+
+  }
   String docuid='';
   final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
   final searchController = TextEditingController();
   final controller = DragSelectGridViewController();
+  TabController _controller;
   int _currentPage = 0;
+
+  FirebaseApp businessApp = Firebase.app('businessApp');
+
+  // FirebaseFunctions functions = FirebaseFunctions.instanceFor(app: Firebase.app('businessApp')).;
+  FirebaseMessaging message = FirebaseMessaging.instance;
 
 
   final pagecontroller = PageController();
@@ -64,7 +88,8 @@ class MainMenuState extends State<MainMenu>{
 
   bool addTags = false;
   bool inLogin = false;
-  var pageData = [];
+  var ofertaData = [];
+  var oferList = [];
 
 
   var listaRecRating = [];
@@ -72,16 +97,26 @@ class MainMenuState extends State<MainMenu>{
   var allTags =[];
 
 
-
   @override
   void initState(){
     super.initState();
+
+    // fetchOfertas();
+
+
+    _controller = TabController(length: ofertaData.length, vsync: this);
     controller.addListener(rebuild);
-    Timer.periodic(Duration(seconds: 5), (Timer timer) {
-      if (_currentPage < 2) {
-        _currentPage++;
-      } else {
+    Timer.periodic(Duration(seconds: 7), (Timer timer) {
+
+      if(ofertaData.length==0){
         _currentPage = 0;
+      }else{
+        if (_currentPage < ofertaData.length) {
+          _currentPage++;
+          // print(_currentPage);
+        } else {
+          _currentPage = 0;
+        }
       }
 
       _pageController.animateToPage(
@@ -90,12 +125,70 @@ class MainMenuState extends State<MainMenu>{
         curve: Curves.easeIn,
       );
     });
+
+
+
+
+
+
+    var initialzationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings =
+    InitializationSettings(android: initialzationSettingsAndroid);
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification?.android;
+
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                channel.description,
+                color: Colors.blueAccent,
+
+                playSound: true,
+                // TODO add a proper drawable resource to android, for now using
+                //      one that already exists in example app.
+                icon: '@mipmap/ic_launcher',
+              ),
+            ));
+      }
+    });
+
+    // getToken();
   }
+
+  void showNotification(){
+
+  }
+
+
 
   @override
   void dispose(){
     controller.removeListener(rebuild);
     super.dispose();
+  }
+
+
+  void _incrementCounter(int ind) {
+    setState(() {
+      _controller.index = ind;
+    });
   }
 
   void rebuild() => setState((){});
@@ -118,6 +211,13 @@ class MainMenuState extends State<MainMenu>{
 
 
   Widget background(){
+
+    // oferList.add({
+    //   "autor": "hola",
+    //   "text": "hi",
+    //
+    // });
+    // print(oferList);
     return Container(
       // height: MediaQuery.of(context).size.height,
       // height: ,
@@ -134,7 +234,7 @@ class MainMenuState extends State<MainMenu>{
       ),
     );
   }
-
+  // 0xcf6397ff
   //menu de abajo
   void settings(String user){
     showModalBottomSheet(
@@ -178,7 +278,7 @@ class MainMenuState extends State<MainMenu>{
         // child: Center(
           child:
           StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance.collection('usuario').doc(user).collection('infoUsuario').doc("username").snapshots(),
+            stream: FirebaseFirestore.instance.collection('usuario').doc(user).snapshots(),
             builder: (context, snapUser) {
 
               var userData = snapUser.data;
@@ -187,6 +287,7 @@ class MainMenuState extends State<MainMenu>{
                 // crossAxisAlignment: CrossAxisAlignment.center,
                 // mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+
                   Container(
                     child: Card(
                       color: Color(0xd000528E),
@@ -222,7 +323,7 @@ class MainMenuState extends State<MainMenu>{
   //drawer izquierdo
   Widget drawerPrincipal(){
     return Theme(data: Theme.of(context).copyWith(
-        canvasColor: Colors.blue.withOpacity(0.2),
+        canvasColor: Color(0xefedeff5),
       ),
 
       child: Drawer(
@@ -233,39 +334,101 @@ class MainMenuState extends State<MainMenu>{
           DrawerHeader(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xff055475), Color(0xff02C39A)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xff2C73D2),Color(0x00edeff5) ],
               ),
             ),
             child: Row(
               children: <Widget>[
-                Text(
-                  'OFER',
-                  style: GoogleFonts.oswald(
-                    textStyle: Theme.of(context).textTheme.headline4,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xffecf19e),
-                  ),
-                  textAlign: TextAlign.center,
+                // Text(
+                //   'OFER',
+                //   style: GoogleFonts.oswald(
+                //     textStyle: Theme.of(context).textTheme.headline4,
+                //     fontSize: 40,
+                //     fontWeight: FontWeight.w700,
+                //     color: Color(0xffFFC75F),
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
+                Stack(
+                  children: <Widget>[
+                    // Stroked text as border.
+                    Text(
+                      'OFER',
+                      style: GoogleFonts.oswald(
+                        foreground:  Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 2
+                          ..color = Colors.black54,
+                        textStyle: Theme.of(context).textTheme.headline4,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+
+                      ),
+                      // textAlign: TextAlign.center,
+                    ),
+                    // Solid text as fill.
+                    Text(
+                      'OFER',
+                      style: GoogleFonts.oswald(
+                        textStyle: Theme.of(context).textTheme.headline4,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFC75F),
+                      ),
+                      // textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                Text(
-                  'PLUS',
-                  style: GoogleFonts.oswald(
-                    textStyle: Theme.of(context).textTheme.headline4,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+                Stack(
+                  children: <Widget>[
+                    // Stroked text as border.
+                    Text(
+                      'PLUS',
+                      style: GoogleFonts.oswald(
+                        foreground:  Paint()
+                          ..style = PaintingStyle.stroke
+                          ..strokeWidth = 2
+                          ..color = Colors.black54,
+                        textStyle: Theme.of(context).textTheme.headline4,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+
+                      ),
+                    //   // textAlign: TextAlign.center,
+                    ),
+                    // Solid text as fill.
+                    Text(
+                      'PLUS',
+                      style: GoogleFonts.oswald(
+                        textStyle: Theme.of(context).textTheme.headline4,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFFFFF),
+                      ),
+                      // textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
+                // Text(
+                //   'PLUS',
+                //   style: GoogleFonts.oswald(
+                //     textStyle: Theme.of(context).textTheme.headline4,
+                //     fontSize: 40,
+                //     fontWeight: FontWeight.w700,
+                //     color: Colors.white,
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
               ],
             ),
           ),
 
           Container(
           child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            color: Color(0xa000528E),
+            margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            color: Color(0xcaFF9671),
               child: ListTile(
                 title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
                 onTap: (){
@@ -276,9 +439,9 @@ class MainMenuState extends State<MainMenu>{
           ),
           Container(
             child: Card(
-              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
 
-              color: Color(0xa000528E),
+              color: Color(0xcaffd17d),
               child: ListTile(
                 title: Text('Gustos', style: TextStyle(color: Colors.white, fontSize: 20),),
                 onTap: (){
@@ -290,9 +453,9 @@ class MainMenuState extends State<MainMenu>{
 
           Container(
             child: Card(
-              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
 
-              color: Color(0xa000528E),
+              color: Color(0xca63c4ff),
               child: ListTile(
                  title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
                 onTap: (){
@@ -303,9 +466,9 @@ class MainMenuState extends State<MainMenu>{
           ),
           Container(
             child: Card(
-              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
 
-              color: Color(0xa000528E),
+              color: Color(0xca48e06c),
               child: ListTile(
                     title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
 
@@ -599,13 +762,13 @@ class MainMenuState extends State<MainMenu>{
                 // ignore: missing_return
                 itemBuilder: (context, index){
                   bool issub = false;
-                  print(snapshot1.docs[index].id);
-                  print(sus.docs.length);
+                  // print(snapshot1.docs[index].id);
+                  // print(sus.docs.length);
 
                   if(sus.docs.length==1){
-                    print(sus.docs[0].id);
+                    // print(sus.docs[0].id);
                     if (sus.docs[0].id == snapshot1.docs[index].id) {
-                      print(sus.docs[0].id);
+                      // print(sus.docs[0].id);
                       issub = true;
                       changeIconSub();
                     }
@@ -621,7 +784,7 @@ class MainMenuState extends State<MainMenu>{
                   }
 
                   final doc = snapshot1.docs[index];
-                  final double num = doc["defaultRating"]+0.0;
+                  final double num = doc["defaultRating"] +0.0;
                   if(listaFiltro.isNotEmpty){
                     if(listaFiltro.contains(doc["type"])){
 
@@ -697,7 +860,7 @@ class MainMenuState extends State<MainMenu>{
                                   child: Center(
                                     child: Ink(
                                       decoration: BoxDecoration(
-                                        color: Color(0xff108aa6),
+                                        color: Color(0xff2C73D2),
                                         borderRadius: new BorderRadius.all(
                                           Radius.circular(10),
 
@@ -721,6 +884,7 @@ class MainMenuState extends State<MainMenu>{
                                                         "¿Quieres quitar tu suscripción?"
                                                     ),
                                                     actions: [
+                                                      
                                                       TextButton(
                                                         onPressed: () {
                                                           Navigator.pop(
@@ -731,6 +895,7 @@ class MainMenuState extends State<MainMenu>{
                                                       TextButton(
                                                         onPressed: () {
                                                           bool vote = false;
+                                                          FirebaseMessaging.instance.unsubscribeFromTopic(doc.id);
                                                           FirebaseFirestore
                                                               .instance
                                                               .collection(
@@ -741,9 +906,9 @@ class MainMenuState extends State<MainMenu>{
                                                               .doc(
                                                               doc.id)
                                                               .delete();
-                                                          // BusinessDatabaseConnect()
-                                                          //     .voteEmpresa(
-                                                          //     pageid, vote);
+                                                          BusinessDatabaseConnect()
+                                                              .subEmpresa(
+                                                              doc.id, vote);
                                                           Navigator.pop(
                                                               context);
                                                           ScaffoldMessenger
@@ -768,9 +933,12 @@ class MainMenuState extends State<MainMenu>{
                                           else {
 
                                             int vote = 0;
+                                            bool subvote = true;
+                                            FirebaseMessaging.instance.subscribeToTopic(doc.id);
+                                            print("subscribed to topic ${doc.id}");
                                             DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
-                                            // BusinessDatabaseConnect()
-                                            //     .voteEmpresa(pageid, vote);
+                                            BusinessDatabaseConnect()
+                                                .subEmpresa(doc.id, subvote);
                                             setState(() {
                                               changeIconUnSub();
                                             });
@@ -978,7 +1146,7 @@ class MainMenuState extends State<MainMenu>{
                                 child: Center(
                                   child: Ink(
                                     decoration: BoxDecoration(
-                                      color: Color(0xff108aa6),
+                                      color: Color(0xff2C73D2),
                                       borderRadius: new BorderRadius.all(
                                         Radius.circular(10),
 
@@ -1012,6 +1180,9 @@ class MainMenuState extends State<MainMenu>{
                                                     TextButton(
                                                       onPressed: () {
                                                         bool vote = false;
+                                                        FirebaseMessaging.instance.unsubscribeFromTopic(doc.id);
+                                                        // FirebaseMessaging.instance.unsubscribeFromTopic("ofertas");
+
                                                         FirebaseFirestore
                                                             .instance
                                                             .collection(
@@ -1022,9 +1193,9 @@ class MainMenuState extends State<MainMenu>{
                                                             .doc(
                                                             doc.id)
                                                             .delete();
-                                                        // BusinessDatabaseConnect()
-                                                        //     .voteEmpresa(
-                                                        //     pageid, vote);
+                                                        BusinessDatabaseConnect()
+                                                            .subEmpresa(
+                                                            doc.id, vote);
                                                         Navigator.pop(
                                                             context);
                                                         ScaffoldMessenger
@@ -1049,9 +1220,13 @@ class MainMenuState extends State<MainMenu>{
                                         else {
 
                                           int vote = 0;
+                                          bool subvote = true;
+                                          FirebaseMessaging.instance.subscribeToTopic(doc.id);
+                                          // FirebaseMessaging.instance.subscribeToTopic("ofertas");
+                                          print("subscribed to topic ${doc.id}");
                                           DatabaseConnect(uid: user.uid).agregarSuscripcion(doc['nombre'], num, vote, doc.id);
-                                          // BusinessDatabaseConnect()
-                                          //     .voteEmpresa(pageid, vote);
+                                          BusinessDatabaseConnect()
+                                              .subEmpresa(doc.id, subvote);
                                           setState(() {
                                             changeIconUnSub();
                                           });
@@ -1204,10 +1379,12 @@ class MainMenuState extends State<MainMenu>{
   fetchOfertas() async {
     List listaEmpresas = await FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('ofertas').get().then((value) => value.docs);
     for(int i=0;i<listaEmpresas.length;i++){
+      // print(listaEmpresas[i].id);
       FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
           listaEmpresas[i].id.toString()
       ).collection("ofertas").snapshots().listen((event) {
-        pageData = event.docs.map((e) => {
+
+        ofertaData = event.docs.map((e) => {
           "pageid": listaEmpresas[i].id.toString(),
           "id": e.id,
           "nombre": e.get("nombre"),
@@ -1216,8 +1393,13 @@ class MainMenuState extends State<MainMenu>{
           "etiquetas": e.get("etiquetas"),
           "categorias": e.get("categorias"),
           "votos": e.get("votos"),
+          "estado": e.get("estado"),
+          "limiteOferta": e.get("limiteOferta"),
+          "limiteUsuario": e.get("limiteUsuario"),
+
         }).toList();
-        // print(pageData);
+        // print(ofertaData);
+        // oferList=ofertaData;
       });
     }
   }
@@ -1400,6 +1582,7 @@ class MainMenuState extends State<MainMenu>{
         ),
         Column(
           children: <Widget>[
+
             FutureBuilder<Widget>(
               future: showOfertas(context, oferta, user),
               builder: (context,AsyncSnapshot<Widget> snapshot){
@@ -1534,7 +1717,7 @@ class MainMenuState extends State<MainMenu>{
                               icon: Icon(istag
                                   ? Icons.check_rounded
                                   : Icons.add),
-                              color: Color(0xff108aa6),
+                              color: Color(0xff2C73D2),
                             ),
                           ),
                         ),
@@ -1557,33 +1740,103 @@ class MainMenuState extends State<MainMenu>{
 
   Future<Widget> showOfertas(BuildContext context, QuerySnapshot snapoferta, String user) async{
 
-    fetchOfertas();
+    if(ofertaData.isEmpty){
+      fetchOfertas();
+    }
 
-    var ofer = pageData.toSet().toList();
+
+    var ofer = ofertaData.toSet().toList();
+    // print(ofer.length);
     // var ofertas = finalOfertasList.toSet().toList();
     int idx = 0;
 
     // rebuild();
+
+    for(int k = 0;k<ofer.length;k++){
+      if(ofer[k]["estado"]=="activo"){
+        for(int m=0;m<snapoferta.size;m++){
+
+          if(snapoferta.docs[m]["ofertaID"]==ofer[k]["id"]){
+
+            if((snapoferta.docs[m]["limite"]==0)||(snapoferta.docs[m]["estado"]==false)){
+              // print("USUARIO ${snapoferta.docs[m]["ofertaID"]}");
+              // print("OFERTAS ${ofer[k]["id"]}");
+              // DatabaseConnect(
+              //     uid: user)
+              //     .likeOferta(
+              //     snapoferta.docs[m]["ofertaID"],true,true,false,snapoferta.docs[m]["limite"]);
+              ofer.removeAt(k);
+              ofertaData.removeAt(k);
+
+            }
+          }
+
+        }
+      }else{
+
+        for(int m=0;m<snapoferta.size;m++) {
+          if (snapoferta.docs[m]["ofertaID"] == ofer[k]["id"]) {
+            DatabaseConnect(
+                  uid: user)
+                  .likeOferta(
+                  snapoferta.docs[m]["ofertaID"],true,false,false,snapoferta.docs[m]["limite"]);
+
+
+          }
+        }
+      }
+
+
+
+
+    }
+
+    // print(ofer.length);
+
     return SizedBox(
-      height: 180,
+      height: 200,
       child: InfinityPageView(
           itemCount: ofer.length,
           controller: _pageController,
-          onPageChanged: (int index) =>
-              setState(() =>
-              idx = index),
+          onPageChanged: (int index) {
+
+            setState(() {
+              idx = index;
+              _incrementCounter(index);
+            });
+
+
+          },
+
           itemBuilder: (_, i) {
+            // print("LENGTH ${ofertaData.length}");// print(i);
             bool isfav = false;
-            for (int j = 0; j < snapoferta.size; j++) {
-              if (snapoferta.docs[j]["ofertaID"] == ofer[i]["id"]) {
-                isfav = true;
+            if(snapoferta.size == 0){
+
+                isfav = false;
                 changeIconFav();
-              }
+
+            }
+            else{
+              for (int j = 0; j < snapoferta.size; j++) {
+                if(ofer.length==0){
+                    isfav = false;
+                    changeIconFav();
+
+                }else{
+                  if (snapoferta.docs[j]["ofertaID"] == ofer[i]["id"]) {
+                    isfav = true;
+                    changeIconFav();
+                  }
+                }
+
+            }
+
             }
             return Padding(
               padding: EdgeInsets
                   .symmetric(
-                  horizontal: 0),
+                  horizontal: 7),
 
               child: FlipCard(
                 direction: FlipDirection.VERTICAL,
@@ -1617,11 +1870,8 @@ class MainMenuState extends State<MainMenu>{
                       //       spreadRadius: 2)
                       // ],
                       // border: Border.all(color: Colors.grey, width: 2),
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          ofer[i]["urlImage"],
-                        ),
-                        fit: BoxFit.cover,),
+                      image: imagePick(ofer[i]["urlImage"]),
+
 
                     ),
                     //     child: Stack(
@@ -1740,7 +1990,7 @@ class MainMenuState extends State<MainMenu>{
                                             DatabaseConnect(
                                                 uid: user)
                                                 .likeOferta(
-                                                ofer[i]["id"]);
+                                                ofer[i]["id"],isfav,true,false,ofer[i]["limiteUsuario"]);
                                             BusinessDatabaseConnect()
                                                 .likeOferta(
                                                 ofer[i]["pageid"],
@@ -1760,7 +2010,7 @@ class MainMenuState extends State<MainMenu>{
                                           : Icons
                                           .favorite_border),
                                       color: Color(
-                                          0xff108aa6),
+                                          0xff2C73D2),
                                     ),
                                   ),
                                 ],
@@ -1810,13 +2060,108 @@ class MainMenuState extends State<MainMenu>{
                               Container(
                                 width: 200,
                                 // height: 200,
-                                child: QrImage(
-                                  data: ofer[i]["id"],
-                                  size: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .height,
-                                ),
+                                child: InkWell(
+                                  onTap: (){
+                                    showDialog(
+                                        barrierDismissible: true,
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            elevation: 24,
+                                            title: Text(
+                                                "¿Quieres usar la oferta?"
+                                            ),
+                                            content: Row(
+                                              children: <Widget>[
+                                                Container(
+                                                  width: 130,
+                                                  height: 130,
+                                                  child: QrImage(
+                                                    data: ofer[i]["id"],
+                                                    size: MediaQuery
+                                                        .of(context)
+                                                        .size
+                                                        .height,
+                                                  ),
+                                                ),
+                                                SizedBox(
+
+                                                  height: 120,
+                                                  child: Column(
+                                                      mainAxisAlignment: MainAxisAlignment
+                                                          .center,
+                                                      crossAxisAlignment: CrossAxisAlignment
+                                                          .start,
+                                                      children: <Widget>[
+                                                        SizedBox(
+                                                          height: 40,
+                                                          // width: 200,
+                                                          child: Text(
+                                                            ofer[i]["nombre"],
+                                                            style: TextStyle(
+                                                                fontSize: 15,
+                                                                color: Colors
+                                                                    .black54),
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          height: 40,
+                                                          // width: 200,
+                                                          child: Text(
+                                                            "GTQ ${ofer[i]["valor"]}",
+                                                            style: TextStyle(
+                                                                fontSize: 15,
+                                                                color: Colors
+                                                                    .black54),
+                                                          ),
+                                                        ),
+
+                                                      ]
+                                                  ),
+                                                ),
+
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                      context);
+                                                },
+                                                child: Text("No"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  bool vote = true;
+                                                  DatabaseConnect(
+                                                      uid: user)
+                                                      .likeOferta(
+                                                      ofer[i]["id"],isfav,true,true,ofer[i]["limiteUsuario"]);
+                                                  BusinessDatabaseConnect()
+                                                      .useOferta(
+                                                      ofer[i]["pageid"],
+                                                      ofer[i]["id"],
+                                                      vote);
+                                                  Navigator.pop(
+                                                      context);
+                                                },
+                                                child: Text("Si"),
+                                              ),
+
+                                            ],
+                                          );
+                                        }
+                                    );
+                                  },
+                                  child: QrImage(
+                                    data: ofer[i]["id"],
+                                    size: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height,
+                                  ),
+                                )
+                                // child:
                               ),
                               SizedBox(
                                 width: 30,
@@ -1866,6 +2211,33 @@ class MainMenuState extends State<MainMenu>{
     );
   }
 
+  DecorationImage imagePick(String img){
+    RegExp imgExp = new RegExp(r"(http)");
+    Uint8List bytes;
+
+    if(imgExp.hasMatch(img)){
+      return DecorationImage(
+        image: NetworkImage(
+          img,
+        ),
+        fit: BoxFit.cover,
+      );
+    }else{
+      final UriData data = Uri.parse(img).data;
+
+      bytes = data.contentAsBytes();
+
+      return DecorationImage(
+        image: MemoryImage(
+            bytes
+        ),
+        fit: BoxFit.cover,
+      );
+
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     fetchOfertas();
@@ -1874,6 +2246,8 @@ class MainMenuState extends State<MainMenu>{
     int idx = 0;
 
     FirestoreStart().connectFS2();
+
+    getToken(user.uid);
     // gustosVerify(context);
     // final height = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -1910,7 +2284,7 @@ class MainMenuState extends State<MainMenu>{
         //      "search",
         //       style: TextStyle(color: Colors.white),
         //       ),
-        backgroundColor: Color(0xff108aa6),
+        backgroundColor: Color(0xff2C73D2),
             ),
 
       drawer: drawerPrincipal(),
@@ -1931,7 +2305,7 @@ class MainMenuState extends State<MainMenu>{
           //   Future.delayed(Duration.zero, () => showAlertPop(context));
           // }
 
-          var ofer = pageData.toSet().toList();
+          var ofer = ofertaData.toSet().toList();
           var ofertas = finalOfertasList.toSet().toList();
           int idx = 0;
           bool isfav = false;
@@ -1958,7 +2332,6 @@ class MainMenuState extends State<MainMenu>{
 
                       // shrinkWrap: true,
                       children: <Widget>[
-
 
                         FutureBuilder<Widget>(
                           future: showOfertas(context, oferta, user.uid),
@@ -2277,6 +2650,7 @@ class MainMenuState extends State<MainMenu>{
 
                         SizedBox(
                           height: 40,
+                          child: TabPageSelector(controller: _controller),
 
                         ),
                         StreamBuilder<QuerySnapshot>(

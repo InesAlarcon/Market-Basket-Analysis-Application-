@@ -508,7 +508,7 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
 
         appBar: AppBar(
           title: Text('Suscripciones'),
-          backgroundColor: Color(0xff108aa6),
+          backgroundColor: Color(0xff2C73D2),
 
         ),
         body: StreamBuilder<QuerySnapshot>(
@@ -586,7 +586,7 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
                                         // setState(()  {
                                         // vote--;
                                         FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('suscripciones').doc(sus.docs[index]["id"]).delete();
-                                        BusinessDatabaseConnect().voteEmpresa(sus.docs[index]["id"], voteVal);
+                                        BusinessDatabaseConnect().subEmpresa(sus.docs[index]["id"], voteVal);
                                         // empresas.removeAt(index);
                                         // });
                                         ScaffoldMessenger.of(context)
@@ -660,7 +660,7 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
                                                 //     }
                                                 //
                                                 // ),
-                                                RatingBar.builder(
+                                                if(!getVoteCount) RatingBar.builder(
                                                   itemSize: 20,
 
                                                   initialRating: ratings+0.0,
@@ -678,6 +678,16 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
                                                     empRate = rating;
 
                                                   },
+                                                )
+                                                else RatingBarIndicator(
+                                                  rating: ratings+0.0,
+                                                  itemBuilder: (context, index) => Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                  ),
+                                                  itemCount: 5,
+                                                  itemSize: 20,
+                                                  itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
                                                 ),
                                                 SizedBox(
                                                   height: 5,
@@ -806,12 +816,13 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
                                                     width: 120,
                                                     child: Card(
                                                       // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                                                      color: Colors.redAccent,
+                                                      color: Color(0xfffa4d6a),
+
                                                       // child: Center(
                                                       child: ListTile(
                                                         title: Align(
                                                           alignment: Alignment.center,
-                                                          child: Text('Quitar Calificación', style: TextStyle( fontSize: 15),textAlign: TextAlign.center),),
+                                                          child: Text('Quitar Calificación', style: TextStyle( fontSize: 15, color: Colors.white),textAlign: TextAlign.center),),
                                                         onTap: () async {
                                                           showDialog(
                                                               barrierDismissible: true,

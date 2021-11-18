@@ -8,12 +8,29 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cliente/src/loginForm.dart';
 import 'package:cliente/src/registrarForm.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cliente/src/usuario.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('Handling a background message ${message.messageId}');
+  print(message.data);
 
+}
+
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'high_importance_channel', // id
+  'High Importance Notifications', // title
+  'This channel is used for important notifications.', // description
+  importance: Importance.high,
+);
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +43,13 @@ void main() async {
            projectId: 'clientloginauth'
        )
    );
-  runApp(MyApp());
+
+   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+   await flutterLocalNotificationsPlugin
+       .resolvePlatformSpecificImplementation<
+       AndroidFlutterLocalNotificationsPlugin>()
+       ?.createNotificationChannel(channel);
+   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -96,22 +119,38 @@ class MyHomePage extends StatefulWidget {
 //Scheme de colores: https://coolors.co/05668d-028090-00a896-02c39a-f0f3bd
 class MyHomePageState extends State<MyHomePage> {
 
+  @override
+  void initState(){
+    super.initState();
+    FirestoreStart().connectFS2();
+    getToken();
+  }
+
+  getToken() async {
+    String token = await FirebaseMessaging.instance.getToken();
+    print(token);
+
+  }
 
   //Segmento: titulo de la pagina
   Widget titulo() {
     return RichText(
       textAlign: TextAlign.center,
-      text: TextSpan(
+      text:
+
+
+      TextSpan(
           text: 'OFER',
           style: GoogleFonts.oswald(
             textStyle: Theme.of(context).textTheme.headline4,
             fontSize: 50,
             fontWeight: FontWeight.w700,
-            color: Color(0xffecf19e),
+            color: Color(0xffFFC75F),
 
             // color: Color(0xffE56B6F),
           ),
           children: [
+
             TextSpan(
               text: 'PLUS',
               style: TextStyle(color: Colors.white, fontSize: 50),
@@ -222,7 +261,7 @@ class MyHomePageState extends State<MyHomePage> {
               gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xff055475), Color(0xff02C39A)])),
+                  colors: [Color(0xff81d8fc), Color(0xff2C73D2)])),
 
           //centrado de los segmentos de la pagina
           child: Column(
@@ -249,3 +288,25 @@ class MyHomePageState extends State<MyHomePage> {
   }
   }
 
+// class MessageHandling extends StatefulWidget{
+//   @override
+//   createState() => MessageHandlingState();
+// }
+// class MessageHandlingState extends State<MessageHandling>{
+//
+//   final FirebaseFirestore db = FirebaseFirestore.instance;
+//   final FirebaseMessaging fcm = FirebaseMessaging.instance;
+//
+//   @override
+//   void initState() {
+//     // TODO: implement initState
+//     super.initState();
+//     fcm.
+//   }
+//
+//   @override
+//   Widget build(BuildContext context){
+//     return null;
+//   }
+//
+// }

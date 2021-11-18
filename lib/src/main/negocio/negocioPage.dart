@@ -1,9 +1,16 @@
 // @dart=2.9
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
+// import 'dart:html';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cliente/src/main/mainMenu.dart';
+import 'package:drop_shadow_image/drop_shadow_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
+import 'package:infinity_page_view/infinity_page_view.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -42,7 +49,9 @@ class NegocioPageState extends State<NegocioPage> {
   var data;
   var datauser;
 
-
+  InfinityPageController _pageController = InfinityPageController(
+    initialPage: 0,
+  );
 
 
   Icon subscribeIcon = new Icon(Icons.add, color: Color(0xff108aa6),);
@@ -90,7 +99,8 @@ class NegocioPageState extends State<NegocioPage> {
   String sucursalid="";
   var pageData = [];
   var sucursalesList = [];
-
+  bool notifs = false;
+  bool subscript = false;
 
   @override
   void initState(){
@@ -98,7 +108,7 @@ class NegocioPageState extends State<NegocioPage> {
     pageid = widget.pageid;
     // userid = widget.userid;
 
-    print(pageid);
+    // print(pageid);
     // print(userid);
 
 
@@ -124,7 +134,7 @@ class NegocioPageState extends State<NegocioPage> {
         "defaultRating": e.get("defaultRating"),
         "voteCount": e.get("voteCount"),
       }).toList();
-      print(pageData);
+      // print(pageData);
     });
   }
 
@@ -156,6 +166,7 @@ class NegocioPageState extends State<NegocioPage> {
 
     return  Column(
       children: <Widget>[
+        SizedBox(height: 20,),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 15),
           child: Container(
@@ -190,7 +201,7 @@ class NegocioPageState extends State<NegocioPage> {
                   // height: 40,
                   // color: Colors.blue,
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child:
                     Center(
 
@@ -208,7 +219,7 @@ class NegocioPageState extends State<NegocioPage> {
                 // SizedBox(height: 20,),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Martes',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -220,7 +231,7 @@ class NegocioPageState extends State<NegocioPage> {
                 ),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Miércoles',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -232,7 +243,7 @@ class NegocioPageState extends State<NegocioPage> {
                 ),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Jueves',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -244,7 +255,7 @@ class NegocioPageState extends State<NegocioPage> {
                 ),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Viernes',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -256,7 +267,7 @@ class NegocioPageState extends State<NegocioPage> {
                 ),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Sabado',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -268,7 +279,7 @@ class NegocioPageState extends State<NegocioPage> {
                 ),
                 Container(
                   child: Card(
-                    color: Color(0xd000528E),
+                    color: Color(0xd00081CF),
                     child: ListTile(
                       dense: true,
                       leading: Text('Domingo',textAlign: TextAlign.left, style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -375,6 +386,189 @@ class NegocioPageState extends State<NegocioPage> {
     
   }
 
+  Widget notificationButton(context,String uid){
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('usuario')
+          .doc(uid).collection("suscripciones")
+          .doc(pageid).snapshots(),
+      // ignore: missing_return
+      builder: (context, sub){
+          if(!sub.hasData||!sub.data.exists){
+            return IconButton(
+              onPressed: () async {
+
+              },
+              icon: Icon(Icons.announcement_outlined),
+              color: Colors.transparent,);
+          }else{
+            notifs = sub.data.get("notifs");
+            if(notifs){
+              return IconButton(
+                  onPressed: () async {
+                    showDialog(
+                        barrierDismissible: true,
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            elevation: 24,
+                            title: Text(
+                                "¿Quieres quitar las notificaciones?"
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(
+                                      context);
+                                },
+                                child: Text("No"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // subscript = true;
+                                  setState(() {
+                                    notifs = false;
+                                  });
+                                  DatabaseConnect(uid: uid)
+                                      .modificarNotificacion(
+                                      pageid, notifs);
+                                  FirebaseMessaging.instance.unsubscribeFromTopic(data.id);
+                                  Navigator.pop(
+                                      context);
+                                  ScaffoldMessenger
+                                      .of(context)
+                                      .showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Notificaciones a ${data['nombre']} Eliminadas')));
+                                },
+                                child: Text("Si"),
+                              ),
+
+                            ],
+                          );
+                        }
+                    );
+
+
+                  },
+                  icon: Icon(Icons.add_alert));
+            }
+            else if(!notifs){
+              return IconButton(
+                onPressed: () async {
+                  FirebaseMessaging.instance.subscribeToTopic(data.id);
+                  setState(() {
+                    notifs = true;
+                  });
+                  DatabaseConnect(uid: uid)
+                      .modificarNotificacion(
+                      pageid, notifs);
+                },
+                icon: Icon(Icons.add_alert_outlined),
+                color: Colors.black38,
+              );
+            }
+          }
+      },
+
+
+    );
+    // if(notifs&&subscript){
+    //   return IconButton(
+    //       onPressed: () async {
+    //           showDialog(
+    //               barrierDismissible: true,
+    //               context: context,
+    //               builder: (context) {
+    //                 return AlertDialog(
+    //                   elevation: 24,
+    //                   title: Text(
+    //                       "¿Quieres quitar las notificaciones?"
+    //                   ),
+    //                   actions: [
+    //                     TextButton(
+    //                       onPressed: () {
+    //                         Navigator.pop(
+    //                             context);
+    //                       },
+    //                       child: Text("No"),
+    //                     ),
+    //                     TextButton(
+    //                       onPressed: () {
+    //                         subscript = true;
+    //                         setState(() {
+    //                           notifs = false;
+    //                         });
+    //                         FirebaseMessaging.instance.unsubscribeFromTopic(data.id);
+    //                         Navigator.pop(
+    //                             context);
+    //                         ScaffoldMessenger
+    //                             .of(context)
+    //                             .showSnackBar(
+    //                             SnackBar(
+    //                                 content: Text(
+    //                                     'Notificaciones a ${data['nombre']} Eliminadas')));
+    //                       },
+    //                       child: Text("Si"),
+    //                     ),
+    //
+    //                   ],
+    //                 );
+    //               }
+    //           );
+    //
+    //
+    //       },
+    //       icon: Icon(Icons.announcement));
+    // }
+    // else if((!notifs)&&(subscript)){
+    //   return IconButton(
+    //       onPressed: () async {
+    //         FirebaseMessaging.instance.subscribeToTopic(data.id);
+    //         setState(() {
+    //           notifs = true;
+    //         });
+    //       },
+    //       icon: Icon(Icons.announcement_outlined),
+    //       color: Colors.black87,
+    //   );
+    // }
+    // else if((!notifs)&&(!subscript)){
+    //   return IconButton(
+    //       onPressed: () async {
+    //
+    //       },
+    //       icon: Icon(Icons.announcement_outlined),
+    //       color: Colors.transparent,);
+    // }
+  }
+
+  DecorationImage imagePick(String img){
+    RegExp imgExp = new RegExp(r"(http)");
+    Uint8List bytes;
+
+    if(imgExp.hasMatch(img)){
+      return DecorationImage(
+        image: NetworkImage(
+          img,
+        ),
+        fit: BoxFit.cover,
+      );
+    }else{
+      final UriData data = Uri.parse(img).data;
+
+      bytes = data.contentAsBytes();
+
+      return DecorationImage(
+        image: MemoryImage(
+          bytes
+        ),
+        fit: BoxFit.cover,
+      );
+
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -419,6 +613,8 @@ class NegocioPageState extends State<NegocioPage> {
                           doc(user.uid).collection("ratings").doc(pageid).snapshots(),
                           builder: (context, snapRating) {
 
+
+
                             bool test = false;
                             bool getVoteCount = false;
                             double empRate = 0.0;
@@ -459,6 +655,9 @@ class NegocioPageState extends State<NegocioPage> {
 
                             String image;
 
+
+                            Uint8List bytes;
+
                             String imageID = "https://drive.google.com/file/d/1wNjSyvKN3EgOOmNHRpX6n6M-VYj9pVdg/view?usp=sharing";
                             RegExp exp = new RegExp(
                                 r"(https://drive.google.com/file/d/)|(/view\?usp=sharing)");
@@ -492,7 +691,7 @@ class NegocioPageState extends State<NegocioPage> {
                               "nombre": e.get("nombre")
                             }).toList();
 
-                            print(sucursalesList);
+                            // print(sucursalesList);
 
                             for(int i = 0; i<stores.size; i++){
 
@@ -533,14 +732,17 @@ class NegocioPageState extends State<NegocioPage> {
 
                             if (imageb) {
                               image = data["urlImage"];
-                              // imageID =
-                              //     data["imageUrl"].toString().replaceAll(exp, "");
+
+                              final UriData img = Uri.parse(image).data;
+
+                              bytes = img.contentAsBytes();
+
                               print("ok ct");
                             } else if (!imageb) {
                               imageID = imageID.toString().replaceAll(exp, "");
                             }
 
-                            double rate = data["defaultRating"] + 0.0;
+                            double rate = data["defaultRating"]  + 0.0;
 
 
                             for (int i = 0; i < snapshot2.data.size; i++) {
@@ -552,125 +754,208 @@ class NegocioPageState extends State<NegocioPage> {
 
 
 
+                            return Container(
+                              // height: MediaQuery.of(context).size.height,
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [Color(0xff81d8fc), Color(0xff2C73D2)])
+                              ),
+                              child: CustomScrollView(
+                                slivers: [
 
-                            return CustomScrollView(
-                              slivers: [
-
-                                SliverAppBar(
-
-                                  backgroundColor: Colors.white,
-                                  iconTheme: IconThemeData(
-                                    color: Colors.black38,
-                                  ),
-                                  actions: <Widget>[
-                                    IconButton(
-                                        onPressed: () async {
-                                          int count = 0;
-                                          Navigator.of(context).popUntil((route) {
-                                            return route.settings.name ==
-                                                'mainMenu';
-                                          });
-                                        },
-                                        icon: Icon(Icons.home)),
-                                  ],
-                                  flexibleSpace: FlexibleSpaceBar(
-                                    titlePadding: EdgeInsets.symmetric(
-                                        horizontal: 40, vertical: 10),
-                                    centerTitle: false,
-                                    title: Row(
-                                      children: <Widget>[
-                                        // SizedBox(
-                                        //   child: Text(
-                                        //     data["nombre"],
-                                        //     textAlign: TextAlign.center,
-                                        //     style: TextStyle(color: Colors.black, fontSize: 12),
-                                        //   ),
-                                        // ),
-                                        //
-                                        // SizedBox(
-                                        //   width: 30,
-                                        // ),
-
-                                        if (!getVoteCount) SizedBox(
+                                  SliverAppBar(
 
 
-                                          child: RatingBar.builder(
-                                            itemSize: 15,
+                                    backgroundColor: Color(0xff2C73D2),
+                                    iconTheme: IconThemeData(
+                                      color: Colors.black38,
+                                    ),
+                                    actions: <Widget>[
+                                      notificationButton(context,user.uid),
+                                      IconButton(
+                                          onPressed: () async {
+                                            int count = 0;
+                                            Navigator.of(context).popUntil((route) {
+                                              return route.settings.name ==
+                                                  'mainMenu';
+                                            });
+                                          },
+                                          icon: Icon(Icons.home)),
+                                    ],
+                                    flexibleSpace: FlexibleSpaceBar(
+                                      titlePadding: EdgeInsets.symmetric(
+                                          horizontal: 40, vertical: 10),
+                                      centerTitle: false,
+                                      title: Row(
+                                        children: <Widget>[
+                                          // SizedBox(
+                                          //   child: Text(
+                                          //     data["nombre"],
+                                          //     textAlign: TextAlign.center,
+                                          //     style: TextStyle(color: Colors.black, fontSize: 12),
+                                          //   ),
+                                          // ),
+                                          //
+                                          // SizedBox(
+                                          //   width: 30,
+                                          // ),
 
-                                            initialRating: data["defaultRating"]+0.0,
-                                            minRating: 1,
-                                            direction: Axis.horizontal,
-                                            allowHalfRating: true,
-                                            itemCount: 5,
-                                            itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                                            itemBuilder: (context, _) => Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                            ),
-                                            onRatingUpdate: (rating) {
-                                              print(rating);
-                                              empRate = rating;
+                                          if (!getVoteCount) SizedBox(
 
-                                            },
-                                          ),
 
-                                        )
-                                        else SizedBox(
-                                          child: RatingBarIndicator(
-                                            rating: data["defaultRating"]+0.0,
-                                            itemBuilder: (context, index) => Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                            ),
-                                            itemCount: 5,
-                                            itemSize: 15,
-                                            itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                                          ),
-                                        ),
-                                        if (!getVoteCount) SizedBox(
-                                            height: 30,
-                                            width: 70,
-                                            child: Card(
-                                              // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                                              color: Colors.orange.shade300,
-                                              // child: Center(
-                                              child: ListTile(
-                                                title: Align(
-                                                  alignment: Alignment(0.0,-3.5),
-                                                  child: Text('Calificar', style: TextStyle( fontSize: 8),textAlign: TextAlign.center),),
-                                                onTap: () async {
-                                                  bool vote = true;
+                                            child: RatingBar.builder(
+                                              itemSize: 15,
 
-                                                  setState(() {
-                                                    changeIconUnSub();
-                                                  });
-                                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
-                                                  DatabaseConnect(uid: user.uid).ratingSubs(pageid, empRate, vote);
-                                                  BusinessDatabaseConnect().voteEmpresa(pageid, vote);
-                                                  Future.delayed(Duration(milliseconds: 500),(){
-                                                    setState(() {
-                                                      BusinessDatabaseConnect().rateEmpresa(pageid, vote, empRate);
-                                                    });
-                                                  });
-                                                  // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(SnackBar(content: Text('Calificación de ${data["nombre"]} modificada')));
-                                                },
+                                              initialRating: data["defaultRating"] +0.0,
+                                              minRating: 1,
+                                              direction: Axis.horizontal,
+                                              allowHalfRating: true,
+                                              itemCount: 5,
+                                              itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                              itemBuilder: (context, _) => Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
                                               ),
-                                            )
-                                        )
-                                        else SizedBox(
+                                              onRatingUpdate: (rating) {
+                                                // print(rating);
+                                                empRate = rating;
+
+                                              },
+                                            ),
+
+                                          )
+                                          else SizedBox(
+                                            child: RatingBarIndicator(
+                                              rating: data["defaultRating"]+0.0,
+                                              itemBuilder: (context, index) => Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                              ),
+                                              itemCount: 5,
+                                              itemSize: 15,
+                                              itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                            ),
+                                          ),
+                                          if (!getVoteCount) SizedBox(
+                                              height: 30,
+                                              width: 70,
+                                              child: Card(
+                                                // shape: RoundedRectangleBorder(
+                                                //   side: BorderSide(
+                                                //     color: Colors.white,
+                                                //     width: 1,
+                                                //   ),
+                                                //   borderRadius: BorderRadius.circular(5),
+                                                // ),
+                                                // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                                                color: Color(0xffffb938),
+                                                // child: Center(
+                                                child: ListTile(
+                                                  title: Align(
+                                                    alignment: Alignment(0.0,-3.5),
+                                                    child: Text('Calificar', style: TextStyle( fontSize: 8),textAlign: TextAlign.center),),
+                                                  onTap: () async {
+                                                    bool vote = true;
+
+                                                    setState(() {
+                                                      changeIconUnSub();
+                                                    });
+                                                    // Navigator.push(context, MaterialPageRoute(builder: (context) => RatingSub(empresa: empresa.name,rating: empresa.rating)));
+                                                    DatabaseConnect(uid: user.uid).ratingSubs(pageid, empRate, vote);
+                                                    BusinessDatabaseConnect().voteEmpresa(pageid, vote);
+                                                    Future.delayed(Duration(milliseconds: 500),(){
+                                                      setState(() {
+                                                        BusinessDatabaseConnect().rateEmpresa(pageid, vote, empRate);
+                                                      });
+                                                    });
+                                                    // BusinessDatabaseConnect().voteEmpresa(empresa.id, vote);
+                                                    ScaffoldMessenger.of(context)
+                                                        .showSnackBar(SnackBar(content: Text('Calificación de ${data["nombre"]} modificada')));
+                                                  },
+                                                ),
+                                              )
+                                          )
+                                          else SizedBox(
+                                              height: 30,
+                                              width: 70,
+                                              child: Card(
+                                                // shape: RoundedRectangleBorder(
+                                                //   side: BorderSide(
+                                                //     color: Colors.white,
+                                                //     width: 1,
+                                                //   ),
+                                                //   borderRadius: BorderRadius.circular(5),
+                                                // ),
+                                                // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                                                color: Color(0xfffa4d6a),
+                                                // child: Center(
+                                                child: ListTile(
+                                                  title: Align(
+                                                    alignment: Alignment(0.0,-3.5),
+                                                    child: Text('Quitar', style: TextStyle( fontSize: 8, color: Colors.white),textAlign: TextAlign.center),),
+                                                  onTap: () async {
+                                                    showDialog(
+                                                        barrierDismissible: true,
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return AlertDialog(
+                                                            elevation: 24,
+                                                            title: Text(
+                                                                "¿Quieres quitar tu calificación?"
+                                                            ),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                },
+                                                                child: Text("No"),
+                                                              ),
+                                                              TextButton(
+                                                                onPressed: () {
+                                                                  bool vote = false;
+                                                                  DatabaseConnect(uid: user.uid).ratingSubs(pageid, 0.0, vote);
+                                                                  BusinessDatabaseConnect().rateEmpresa(pageid, vote, ratings);
+                                                                  Future.delayed(Duration(milliseconds: 500),(){
+                                                                    setState(() {
+                                                                      BusinessDatabaseConnect().voteEmpresa(pageid, vote);
+                                                                    });
+                                                                  });
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                  ScaffoldMessenger
+                                                                      .of(context)
+                                                                      .showSnackBar(
+                                                                      SnackBar(
+                                                                          content: Text(
+                                                                              'Calificación a ${data["empresa"]} Eliminada')));
+                                                                },
+                                                                child: Text("Si"),
+                                                              ),
+
+                                                            ],
+                                                          );
+                                                        }
+                                                    );
+                                                    setState(() {
+                                                      test = false;
+                                                    });
+
+                                                  },
+                                                ),
+                                              )
+                                          ),
+                                          SizedBox(
                                             height: 30,
-                                            width: 70,
-                                            child: Card(
-                                              // margin: EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                                              color: Colors.redAccent,
-                                              // child: Center(
-                                              child: ListTile(
-                                                title: Align(
-                                                  alignment: Alignment(0.0,-3.5),
-                                                  child: Text('Quitar', style: TextStyle( fontSize: 8),textAlign: TextAlign.center),),
-                                                onTap: () async {
+                                            width: 80,
+                                            child: IconButton(
+
+                                              onPressed: () {
+                                                int voteC = vc;
+
+                                                if (issub) {
                                                   showDialog(
                                                       barrierDismissible: true,
                                                       context: context,
@@ -678,7 +963,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                         return AlertDialog(
                                                           elevation: 24,
                                                           title: Text(
-                                                              "¿Quieres quitar tu calificación?"
+                                                              "¿Quieres quitar tu suscripción?"
                                                           ),
                                                           actions: [
                                                             TextButton(
@@ -691,13 +976,23 @@ class NegocioPageState extends State<NegocioPage> {
                                                             TextButton(
                                                               onPressed: () {
                                                                 bool vote = false;
-                                                                DatabaseConnect(uid: user.uid).ratingSubs(pageid, 0.0, vote);
-                                                                BusinessDatabaseConnect().rateEmpresa(pageid, vote, ratings);
-                                                                Future.delayed(Duration(milliseconds: 500),(){
-                                                                  setState(() {
-                                                                    BusinessDatabaseConnect().voteEmpresa(pageid, vote);
-                                                                  });
-                                                                });
+                                                                subscript = false;
+                                                                notifs = false;
+                                                                FirebaseMessaging.instance.unsubscribeFromTopic(data.id);
+
+                                                                FirebaseFirestore
+                                                                    .instance
+                                                                    .collection(
+                                                                    'usuario')
+                                                                    .doc(user.uid)
+                                                                    .collection(
+                                                                    'suscripciones')
+                                                                    .doc(
+                                                                    data.id)
+                                                                    .delete();
+                                                                BusinessDatabaseConnect()
+                                                                    .subEmpresa(
+                                                                    pageid, vote);
                                                                 Navigator.pop(
                                                                     context);
                                                                 ScaffoldMessenger
@@ -705,7 +1000,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                     .showSnackBar(
                                                                     SnackBar(
                                                                         content: Text(
-                                                                            'Calificación a ${data["empresa"]} Eliminada')));
+                                                                            'Suscripción a ${data['nombre']} Eliminada')));
                                                               },
                                                               child: Text("Si"),
                                                             ),
@@ -714,810 +1009,920 @@ class NegocioPageState extends State<NegocioPage> {
                                                         );
                                                       }
                                                   );
+
                                                   setState(() {
-                                                    test = false;
+                                                    issub = false;
                                                   });
+                                                } else {
+                                                  // print(data.id);
+                                                  bool vote = true;
+                                                  subscript = true;
+                                                  notifs = true;
+                                                  FirebaseMessaging.instance.subscribeToTopic(data.id);
 
-                                                },
-                                              ),
-                                            )
-                                        ),
-                                        SizedBox(
-                                          height: 30,
-                                          width: 80,
-                                          child: IconButton(
-
-                                            onPressed: () {
-                                              int voteC = vc;
-
-                                              if (issub) {
-                                                showDialog(
-                                                    barrierDismissible: true,
-                                                    context: context,
-                                                    builder: (context) {
-                                                      return AlertDialog(
-                                                        elevation: 24,
-                                                        title: Text(
-                                                            "¿Quieres quitar tu suscripción?"
-                                                        ),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                            },
-                                                            child: Text("No"),
-                                                          ),
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              bool vote = false;
-                                                              FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                  'usuario')
-                                                                  .doc(user.uid)
-                                                                  .collection(
-                                                                  'suscripciones')
-                                                                  .doc(
-                                                                  data.id)
-                                                                  .delete();
-                                                              // BusinessDatabaseConnect()
-                                                              //     .voteEmpresa(
-                                                              //     pageid, vote);
-                                                              Navigator.pop(
-                                                                  context);
-                                                              ScaffoldMessenger
-                                                                  .of(context)
-                                                                  .showSnackBar(
-                                                                  SnackBar(
-                                                                      content: Text(
-                                                                          'Suscripción a ${data['nombre']} Eliminada')));
-                                                            },
-                                                            child: Text("Si"),
-                                                          ),
-
-                                                        ],
-                                                      );
-                                                    }
-                                                );
-
-                                                setState(() {
-                                                  issub = false;
-                                                });
-                                              } else {
-                                                print(data.id);
-                                                bool vote = true;
-                                                DatabaseConnect(uid: user.uid)
-                                                    .agregarSuscripcion(
-                                                    data['nombre'], rate, voteC,
-                                                    pageid);
-                                                // BusinessDatabaseConnect()
-                                                //     .voteEmpresa(pageid, vote);
-                                                setState(() {
-                                                  changeIconUnSub();
-                                                });
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(SnackBar(
-                                                    content: Text(
-                                                        'Suscrito a ${data['nombre']}')));
-                                              }
-                                            },
-                                            iconSize: 20,
-                                            icon: Icon(issub
-                                                ? Icons.check_rounded
-                                                : Icons.add),
-                                            color: Color(0xff108aa6),
-                                          ),
-                                        ),
-
-
-                                      ],
-                                    ),
-
-                                    background: Column(
-
-                                      children: <Widget>[
-                                        SizedBox(
-                                          height: 20,
-                                        ),
-                                        Container(
-                                          width: 230,
-                                          height: 230,
-                                          child: FittedBox(
-                                            child: Center(
-                                              child: Image.network(
-                                                image,
-                                                fit: BoxFit.fill,),
+                                                  DatabaseConnect(uid: user.uid)
+                                                      .agregarSuscripcion(
+                                                      data['nombre'], rate, voteC,
+                                                      pageid);
+                                                  BusinessDatabaseConnect()
+                                                      .subEmpresa(pageid, vote);
+                                                  setState(() {
+                                                    changeIconUnSub();
+                                                  });
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(SnackBar(
+                                                      content: Text(
+                                                          'Suscrito a ${data['nombre']}')));
+                                                }
+                                              },
+                                              iconSize: 20,
+                                              icon: Icon(issub
+                                                  ? Icons.check_rounded
+                                                  : Icons.add),
+                                              color: Color(0xff2C73D2),
                                             ),
                                           ),
-                                        ),
 
-                                      ],
-                                    ),
-                                    // background:
-                                    // fit: BoxFit.cover,
-
-                                  ),
-                                  pinned: true,
-                                  expandedHeight: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .height * 0.305,
-                                ),
-                                SliverList(delegate: SliverChildListDelegate([
-                                  Stack(
-
-                                    children: <Widget>[
-
-                                      // Expanded(
-                                      //   flex: 1,
-                                      //   child: PageView(
-                                      //     children: <Widget>[
-                                      //       Stack(
-                                      //           children: <Widget>[
-                                      //
-                                      //           ]
-                                      //       ),
-                                      //       GoogleMap(
-                                      //         markers: markersMap,
-                                      //         onMapCreated: onMapCreated,
-                                      //         initialCameraPosition: CameraPosition(
-                                      //           target: LatLng(
-                                      //               inlat, inlng),
-                                      //           zoom: 12,
-                                      //         ),
-                                      //         myLocationButtonEnabled: false,
-                                      //         zoomControlsEnabled: true,
-                                      //       ),
-                                      //     ],
-                                      //   ),
-                                      // ),
-                                      Column(
-                                        children: <Widget>[
-                                          Container(
-                                            height: 2,
-                                            width: MediaQuery
-                                                .of(context)
-                                                .size
-                                                .width,
-                                            decoration: BoxDecoration(
-                                                color: Colors.black12,
-
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    offset: const Offset(
-                                                        3.0, 3.0),
-                                                    blurRadius: 10.0,
-                                                    spreadRadius: 2.0,
-                                                  ),
-                                                ]
-                                            ),
-                                          ),
-                                          // Padding(
-                                          //   padding: EdgeInsets.symmetric(horizontal: 1),
-                                          //   child:
-                                          //   ),
-                                          // ),
-
-
-                                          SizedBox(height: 550),
-                                          // Padding(
-                                          //   padding: EdgeInsets.symmetric(horizontal: 10),
-                                          //   child: Divider(
-                                          //     color: Colors.black26,
-                                          //     thickness: 2,
-                                          //   ),
-                                          // ),
-                                          Container(
-                                            height: 600,
-                                            margin: new EdgeInsets.only(
-                                              top: 5,
-                                              left: 0,
-                                              right: 0,
-                                            ),
-                                            // padding: EdgeInsets.symmetric(
-                                            //     vertical: 20,
-                                            //     horizontal: 20),
-                                            decoration: BoxDecoration(
-
-                                              borderRadius: new BorderRadius.only(
-                                                topLeft: const Radius.circular(
-                                                    10),
-                                                topRight: const Radius.circular(
-                                                    7),
-                                              ),
-                                              // color: Color(0xff055475),
-                                              image: DecorationImage(
-                                                image: AssetImage(
-                                                    "assets/images/background2.png"),
-                                                fit: BoxFit.fill,
-
-                                              ),
-                                            ),
-                                            // child: Image(
-                                            //     image: AssetImage("assets/images/background2.png"),
-                                            //     fit: BoxFit.cover
-                                            // ),
-                                          ),
 
                                         ],
                                       ),
-                                      if(!ct) Center(
-                                        child: Container(
-                                          height: 40,
-                                          width: 300,
-                                          decoration: BoxDecoration(
 
-                                            borderRadius: new BorderRadius
-                                                .vertical(
-                                              bottom: Radius.circular(10),
-                                            ),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                    0.3),
-                                                spreadRadius: 5,
-                                                blurRadius: 7,
-                                                offset: Offset(0,
-                                                    3), // changes position of shadow
+                                      background:
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: <Widget>[
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)])
+                                            ),),
+                                          Column(
+
+                                            children: <Widget>[
+                                              SizedBox(
+                                                height: 20,
                                               ),
+                                              Container(
+                                                width: 230,
+                                                height: 230,
+                                                // color: Color(0xFFFFFFFF),
+                                                child: FittedBox(
+                                                  child: Center(
+                                                    child: DropShadowImage(
+                                                      borderRadius: 15,
+                                                      blurRadius: 0,
+                                                      offset: Offset(2,5),
+                                                      scale: 1.01,
+                                                      image: Image.memory(
+                                                        bytes,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                      // image: Image.network(
+                                                      //   image,
+                                                      //   fit: BoxFit.cover,
+                                                      // ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
                                             ],
                                           ),
-                                          child: Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: Text(
-                                              data["nombre"],
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 25),
-                                            ),
-                                          ),
-
-                                        ),
+                                        ],
                                       ),
-                                      Center(
-                                        child: Column(
+
+                                      // background:
+                                      // fit: BoxFit.cover,
+
+                                    ),
+                                    pinned: true,
+                                    expandedHeight: 300,
+                                    // MediaQuery
+                                    //     .of(context)
+                                    //     .size
+                                    //     .height * 0.305,
+                                  ),
+                                  SliverList(delegate: SliverChildListDelegate([
+                                    Stack(
+
+                                      children: <Widget>[
+
+                                        // Expanded(
+                                        //   flex: 1,
+                                        //   child: PageView(
+                                        //     children: <Widget>[
+                                        //       Stack(
+                                        //           children: <Widget>[
+                                        //
+                                        //           ]
+                                        //       ),
+                                        //       GoogleMap(
+                                        //         markers: markersMap,
+                                        //         onMapCreated: onMapCreated,
+                                        //         initialCameraPosition: CameraPosition(
+                                        //           target: LatLng(
+                                        //               inlat, inlng),
+                                        //           zoom: 12,
+                                        //         ),
+                                        //         myLocationButtonEnabled: false,
+                                        //         zoomControlsEnabled: true,
+                                        //       ),
+                                        //     ],
+                                        //   ),
+                                        // ),
+                                        Column(
                                           children: <Widget>[
-
-
-                                            SizedBox(height: 50),
-                                            StreamBuilder <QuerySnapshot>(
-                                                stream: FirebaseFirestore.
-                                                instanceFor(app: Firebase.app('businessApp')).
-                                                collection('ofertas').doc(pageid).collection("ofertas").
-                                                snapshots(),
-                                                builder: (context, snapshot1) {
-                                                  int idx = 0;
-                                                  var oferta = snapshot1.data;
-                                                  bool isfav = false;
-
-
-
-
-
-                                                  return SizedBox(
-                                                    height: 180,
-                                                    child: PageView.builder(
-                                                        itemCount: snapshot1.data.docs.length,
-                                                        controller: PageController(/*viewportFraction: 0.9*/),
-                                                        onPageChanged: (
-                                                            int index) =>
-                                                            setState(() =>
-                                                            idx = index),
-                                                        itemBuilder: (_, i) {
-                                                          for (int j = 0; j < snapoferta.data.size; j++) {
-                                                            if (snapoferta.data.docs[j]["ofertaID"] == oferta.docs[i].id) {
-                                                              isfav = true;
-                                                              changeIconFav();
-                                                            }
-                                                          }
-                                                          return Padding(
-                                                            padding: EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 7),
-
-                                                            child: FlipCard(
-                                                              direction: FlipDirection.VERTICAL,
-                                                              front: Card(
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius
-                                                                      .all(Radius
-                                                                      .circular(5)),
-                                                                ),
-                                                                child: Container(
-                                                                  width: MediaQuery.of(context).size.width,
-                                                                  // height: 50,
-                                                                  padding: EdgeInsets
-                                                                      .symmetric(
-                                                                      vertical: 20),
-                                                                  alignment: Alignment
-                                                                      .center,
-                                                                  decoration: BoxDecoration(
-                                                                    borderRadius: BorderRadius
-                                                                        .all(Radius
-                                                                        .circular(
-                                                                        5)),
-                                                                    // boxShadow: <BoxShadow>[
-                                                                    //   BoxShadow(
-                                                                    //       color: Colors.black,
-                                                                    //       offset: Offset(0, 4),
-                                                                    //       blurRadius: 10,
-                                                                    //       spreadRadius: 2)
-                                                                    // ],
-                                                                    // border: Border.all(color: Colors.grey, width: 2),
-                                                                    image: DecorationImage(
-                                                                      image: NetworkImage(
-                                                                        oferta.docs[i]["urlImage"],
-                                                                      ),
-                                                                      fit: BoxFit.cover,),
-
-                                                                  ),
-                                                                  //     child: Stack(
-                                                                  //       children: <Widget>[
-                                                                  //         Container(
-                                                                  //           // height: ,
-                                                                  //           width: MediaQuery.of(context).size.width,
-                                                                  //           // color: Colors.amber,
-                                                                  //           child: Row(
-                                                                  //             crossAxisAlignment: CrossAxisAlignment.center,
-                                                                  //             // mainAxisAlignment: MainAxisAlignment.center,
-                                                                  //
-                                                                  //             children: <Widget>[
-                                                                  //               Container(
-                                                                  //                 width: 200,
-                                                                  //                 // height: 100,
-                                                                  //                 decoration: BoxDecoration(
-                                                                  //                   borderRadius: BorderRadius
-                                                                  //                       .all(Radius
-                                                                  //                       .circular(
-                                                                  //                       5)),
-                                                                  //                   // boxShadow: <BoxShadow>[
-                                                                  //                   //   BoxShadow(
-                                                                  //                   //       color: Colors.black,
-                                                                  //                   //       offset: Offset(0, 4),
-                                                                  //                   //       blurRadius: 10,
-                                                                  //                   //       spreadRadius: 2)
-                                                                  //                   // ],
-                                                                  //                   // border: Border.all(color: Colors.grey, width: 2),
-                                                                  //                   image: DecorationImage(
-                                                                  //                     image: NetworkImage(
-                                                                  //                       oferta.docs[i]["urlImage"],
-                                                                  //                       ),
-                                                                  //                       fit: BoxFit.fill,),
-                                                                  //
-                                                                  //                   ),
-                                                                  //                 ),
-                                                                  //               SizedBox(
-                                                                  //                 width: 30,
-                                                                  //               ),
-                                                                  //               Column(
-                                                                  //                 mainAxisAlignment: MainAxisAlignment.start,
-                                                                  //
-                                                                  //                 children: <Widget>[
-                                                                  //                   Text(
-                                                                  //                     oferta.docs[i]["nombre"],
-                                                                  //                     style: TextStyle(
-                                                                  //                         fontSize: 20,
-                                                                  //                         color: Colors
-                                                                  //                             .white),
-                                                                  //
-                                                                  //
-                                                                  //                     //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
-                                                                  //
-                                                                  //
-                                                                  //                   ),
-                                                                  //                 ]
-                                                                  //               ),
-                                                                  //
-                                                                  //             ],
-                                                                  //           ),
-                                                                  //         ),
-                                                                  //   ],
-                                                                  //
-                                                                  // ),
-                                                                  child: Stack(
-                                                                    children: <Widget>[
-                                                                      Container(
-                                                                        padding: EdgeInsets.symmetric(horizontal: 5),
-                                                                        child: Align(
-                                                                          alignment: Alignment.bottomLeft,
-
-                                                                          child: Container(
-                                                                            height: 45,
-                                                                            width: 45,
-                                                                            decoration: BoxDecoration(
-                                                                              borderRadius: BorderRadius
-                                                                                  .all(Radius
-                                                                                  .circular(12)),
-                                                                              color: Colors.white,
-                                                                            ),
-
-                                                                            child: Stack(
-                                                                              children: <Widget>[
-                                                                                Align(
-                                                                                  alignment: Alignment.center,
-                                                                                  child: IconButton(
-                                                                                    iconSize: 30,
-                                                                                    onPressed: (){
-
-                                                                                      if(isfav){
-                                                                                        bool vote = false;
-                                                                                        setState(() {
-                                                                                          isfav = false;
-                                                                                          FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('ofertas').doc(oferta.docs[i].id).delete();
-                                                                                          BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
-                                                                                        });
-
-                                                                                      }else{
-                                                                                        bool vote = true;
-                                                                                        setState(() {
-
-                                                                                          isfav = true;
-                                                                                          DatabaseConnect(uid: user.uid).likeOferta(oferta.docs[i].id);
-                                                                                          BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
-                                                                                          ScaffoldMessenger.of(context)
-                                                                                              .showSnackBar(SnackBar(
-                                                                                              content: Text(
-                                                                                                  'Te gusta ${oferta.docs[i]["nombre"]}')));
-                                                                                        });
-                                                                                      }
-
-                                                                                    },
-                                                                                    icon: Icon(isfav
-                                                                                        ? Icons.favorite
-                                                                                        : Icons.favorite_border),
-                                                                                    color: Color(0xff108aa6),
-                                                                                  ),
-                                                                                ),
-                                                                              ],
-                                                                            ),
-                                                                          ),
-
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-
-                                                              ),
-                                                              back: Card(
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius
-                                                                      .all(Radius
-                                                                      .circular(5)),
-                                                                ),
-                                                                child: Container(
-                                                                  width: MediaQuery.of(context).size.width,
-                                                                  // height: 50,
-                                                                  padding: EdgeInsets
-                                                                      .symmetric(
-                                                                      vertical: 20),
-                                                                  alignment: Alignment
-                                                                      .center,
-                                                                  //
-                                                                  child: Stack(
-                                                                    children: <Widget>[
-                                                                      Container(
-                                                                        // height: ,
-                                                                        width: MediaQuery.of(context).size.width,
-                                                                        // color: Colors.amber,
-                                                                        child: Row(
-                                                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                                                          // mainAxisAlignment: MainAxisAlignment.center,
-
-                                                                          children: <Widget>[
-                                                                            Container(
-                                                                              width: 200,
-                                                                              // height: 200,
-                                                                              child: QrImage(
-                                                                                data: oferta.docs[i].id,
-                                                                                size: MediaQuery.of(context).size.height,
-                                                                              ),
-                                                                            ),
-                                                                            SizedBox(
-                                                                              width: 30,
-                                                                            ),
-                                                                            Column(
-                                                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                                                children: <Widget>[
-                                                                                  Text(
-                                                                                    oferta.docs[i]["nombre"],
-                                                                                    style: TextStyle(
-                                                                                        fontSize: 20,
-                                                                                        color: Colors
-                                                                                            .black54),
-                                                                                  ),
-                                                                                  SizedBox(
-                                                                                    height: 20,
-                                                                                  ),
-                                                                                  Text(
-                                                                                    "GTQ ${oferta.docs[i]["valor"]}",
-                                                                                    style: TextStyle(
-                                                                                        fontSize: 20,
-                                                                                        color: Colors
-                                                                                            .black54),
-                                                                                  ),
-                                                                                ]
-                                                                            ),
-
-                                                                          ],
-                                                                        ),
-                                                                      ),
-                                                                    ],
-
-                                                                  ),
-                                                                ),
-
-                                                              ),
-                                                            ),
-
-
-                                                          );
-                                                        }
-                                                    ),
-                                                    // child:
-                                                  );
-                                                }
-                                            ),
-                                            SizedBox(height: 10),
                                             Container(
+                                              height: 2,
                                               width: MediaQuery
                                                   .of(context)
                                                   .size
-                                                  .width * 0.9,
-                                              height: 300,
+                                                  .width,
                                               decoration: BoxDecoration(
+                                                  color: Colors.black12,
 
-                                                borderRadius: new BorderRadius
-                                                    .all(
-                                                  Radius.circular(10),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      offset: const Offset(
+                                                          3.0, 3.0),
+                                                      blurRadius: 10.0,
+                                                      spreadRadius: 2.0,
+                                                    ),
+                                                  ]
+                                              ),
+                                            ),
+                                            // Padding(
+                                            //   padding: EdgeInsets.symmetric(horizontal: 1),
+                                            //   child:
+                                            //   ),
+                                            // ),
+
+
+                                            SizedBox(height: 150),
+                                            // Padding(
+                                            //   padding: EdgeInsets.symmetric(horizontal: 10),
+                                            //   child: Divider(
+                                            //     color: Colors.black26,
+                                            //     thickness: 2,
+                                            //   ),
+                                            // ),
+                                            //BGIMAGE
+                                            // Container(
+                                            //   height: 600,
+                                            //   margin: new EdgeInsets.only(
+                                            //     top: 5,
+                                            //     left: 0,
+                                            //     right: 0,
+                                            //   ),
+                                            //   // padding: EdgeInsets.symmetric(
+                                            //   //     vertical: 20,
+                                            //   //     horizontal: 20),
+                                            //   decoration: BoxDecoration(
+                                            //
+                                            //     borderRadius: new BorderRadius.only(
+                                            //       topLeft: const Radius.circular(
+                                            //           10),
+                                            //       topRight: const Radius.circular(
+                                            //           7),
+                                            //     ),
+                                            //     // color: Color(0xff055475),
+                                            //     image: DecorationImage(
+                                            //       image: AssetImage(
+                                            //           "assets/images/background2.png"),
+                                            //       fit: BoxFit.fill,
+                                            //
+                                            //     ),
+                                            //   ),
+                                            //   // child: Image(
+                                            //   //     image: AssetImage("assets/images/background2.png"),
+                                            //   //     fit: BoxFit.cover
+                                            //   // ),
+                                            // ),
+
+                                          ],
+                                        ),
+                                        if(!ct) Center(
+                                          child: Container(
+                                            height: 40,
+                                            width: MediaQuery.of(context).size.width,
+                                            decoration: BoxDecoration(
+
+                                              borderRadius: new BorderRadius
+                                                  .vertical(
+                                                bottom: Radius.circular(10),
+                                              ),
+                                              color: Color(0xffFFFFFF),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(
+                                                      0.3),
+                                                  spreadRadius: 5,
+                                                  blurRadius: 7,
+                                                  offset: Offset(0,
+                                                      3), // changes position of shadow
                                                 ),
-                                                color: Color(0xffefeeec),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black12
-                                                        .withOpacity(0.5),
-                                                    spreadRadius: 1,
-                                                    blurRadius: 7,
-                                                    offset: Offset(0,
-                                                        3), // changes position of shadow
+                                              ],
+                                            ),
+                                            child: Align(
+                                              alignment: Alignment.bottomCenter,
+                                              child:
+                                              Stack(
+                                                children: <Widget>[
+                                                  // Stroked text as border.
+                                                  // Text(
+                                                  //   data["nombre"],
+                                                  //   style: TextStyle(
+                                                  //     fontSize: 25,
+                                                  //     foreground: Paint()
+                                                  //       ..style = PaintingStyle.stroke
+                                                  //       ..strokeWidth = 3
+                                                  //       ..color = Colors.deepPurpleAccent,
+                                                  //   ),
+                                                  // ),
+                                                  // Solid text as fill.
+                                                  Text(
+                                                    data["nombre"],
+                                                    style: TextStyle(
+                                                      fontSize: 25,
+                                                      color: Colors.black87,
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-
-                                              child: Center(
-                                                child: Stack(
-                                                    children: [
-                                                      Container(
-                                                        padding: EdgeInsets.all(
-                                                            5),
-                                                        decoration: BoxDecoration(
-
-                                                          borderRadius: new BorderRadius
-                                                              .all(
-                                                            Radius.circular(10),
-                                                          ),
-                                                        ),
-                                                        child: GoogleMap(
-                                                          zoomGesturesEnabled: true,
-                                                          markers: markersMap,
-                                                          onMapCreated: onMapCreated,
-                                                          initialCameraPosition: CameraPosition(
-                                                            target: LatLng(
-                                                                inlat, inlng),
-                                                            zoom: 12,
-                                                          ),
-                                                          myLocationButtonEnabled: false,
-                                                          zoomControlsEnabled: true,
-                                                        ),
-                                                      ),
-
-                                                    ]
-                                                ),
-                                              ),
-
-                                            ),
-                                            SizedBox(height: 250),
-                                            Container(
-
-                                              padding: EdgeInsets
-                                                  .symmetric(
-                                                  horizontal: 10),
-                                              width: MediaQuery
-                                                  .of(context)
-                                                  .size
-                                                  .width * 0.9,
-                                              // height: 500,
-                                              // decoration: BoxDecoration(
-                                              //
-                                              //   borderRadius: new BorderRadius
-                                              //       .all(
-                                              //     Radius.circular(10),
-                                              //   ),
-                                              //   color: Color(0xffc3d3e3),
-                                              //   boxShadow: [
-                                              //     BoxShadow(
-                                              //       color: Colors.black54
-                                              //           .withOpacity(0.5),
-                                              //       spreadRadius: 5,
-                                              //       blurRadius: 7,
-                                              //       offset: Offset(0,
-                                              //           3), // changes position of shadow
-                                              //     ),
-                                              //   ],
+                                              // Text(
+                                              //   ,
+                                              //   textAlign: TextAlign.center,
+                                              //   style: TextStyle(
+                                              //       color: Colors.white,
+                                              //       fontSize: 25),
                                               // ),
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child:Wrap(
-                                                  // shrinkWrap: true,
-                                                    children: <Widget>[
-                                                      DropdownButton<String>(
-                                                        hint: new Text("Seleccionar Sucursal"),
-                                                        value: sucursal,
-                                                        onChanged: (String newStore){
-                                                          setState(() {
-                                                            sucursalid = newStore;
-                                                            // sucursal=newStore;
-                                                            // sucursalid = sucursalNombre;
-                                                          });
-
-                                                          // print("sucursal ${sucursalNombre}");
-
-                                                        },
-                                                        items: sucursalesList.map((sucursal){
-                                                          return new DropdownMenuItem(
-                                                            child: new Text(sucursal['nombre']),
-                                                            value: sucursal['id'].toString(),
-                                                          );
-                                                        }
-
-                                                        ).toList(),
-
-                                                      ),
-                                                      if(!(sucursalid == null||sucursalid=="")) updateSucursal(sucursalid),
-
-
-                                                    ]
-                                                ),
-
-                                              ),
-
                                             ),
-                                            SizedBox(height: 10),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 45),
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 4),
-                                                // width: 400,
-                                                height: 60,
+
+                                          ),
+                                        ),
+                                        Center(
+                                          child: Column(
+                                            children: <Widget>[
+
+
+                                              SizedBox(height: 50),
+                                              StreamBuilder <QuerySnapshot>(
+                                                  stream: FirebaseFirestore.
+                                                  instanceFor(app: Firebase.app('businessApp')).
+                                                  collection('ofertas').doc(pageid).collection("ofertas").
+                                                  snapshots(),
+                                                  builder: (context, snapshot1) {
+                                                    int idx = 0;
+                                                    var oferta = snapshot1.data;
+                                                    bool isfav = false;
+                                                    
+                                                    
+
+
+
+
+
+
+                                                    return SizedBox(
+                                                      height: 200,
+                                                      child: InfinityPageView(
+                                                          itemCount: snapshot1.data.docs.length,
+                                                          controller: _pageController,
+                                                          onPageChanged: (
+                                                              int index) =>
+                                                              setState(() =>
+                                                              idx = index),
+                                                          itemBuilder: (_, i) {
+                                                            for (int j = 0; j < snapoferta.data.size; j++) {
+                                                              if (snapoferta.data.docs[j]["ofertaID"] == oferta.docs[i].id) {
+                                                                isfav = true;
+                                                                changeIconFav();
+                                                              }
+                                                            }
+
+
+                                                            return Padding(
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal: 7),
+
+                                                              child: FlipCard(
+                                                                direction: FlipDirection.VERTICAL,
+                                                                front: Card(
+                                                                  shape: RoundedRectangleBorder(
+                                                                    borderRadius: BorderRadius
+                                                                        .all(Radius
+                                                                        .circular(5)),
+                                                                  ),
+                                                                  child: Container(
+                                                                    width: MediaQuery.of(context).size.width,
+                                                                    // height: 50,
+                                                                    padding: EdgeInsets
+                                                                        .symmetric(
+                                                                        vertical: 20),
+                                                                    alignment: Alignment
+                                                                        .center,
+                                                                    decoration: BoxDecoration(
+                                                                      borderRadius: BorderRadius
+                                                                          .all(Radius
+                                                                          .circular(
+                                                                          5)),
+                                                                      // boxShadow: <BoxShadow>[
+                                                                      //   BoxShadow(
+                                                                      //       color: Colors.black,
+                                                                      //       offset: Offset(0, 4),
+                                                                      //       blurRadius: 10,
+                                                                      //       spreadRadius: 2)
+                                                                      // ],
+                                                                      // border: Border.all(color: Colors.grey, width: 2),
+                                                                      image: imagePick(oferta.docs[i]["urlImage"]),
+
+                                                                    ),
+                                                                    //     child: Stack(
+                                                                    //       children: <Widget>[
+                                                                    //         Container(
+                                                                    //           // height: ,
+                                                                    //           width: MediaQuery.of(context).size.width,
+                                                                    //           // color: Colors.amber,
+                                                                    //           child: Row(
+                                                                    //             crossAxisAlignment: CrossAxisAlignment.center,
+                                                                    //             // mainAxisAlignment: MainAxisAlignment.center,
+                                                                    //
+                                                                    //             children: <Widget>[
+                                                                    //               Container(
+                                                                    //                 width: 200,
+                                                                    //                 // height: 100,
+                                                                    //                 decoration: BoxDecoration(
+                                                                    //                   borderRadius: BorderRadius
+                                                                    //                       .all(Radius
+                                                                    //                       .circular(
+                                                                    //                       5)),
+                                                                    //                   // boxShadow: <BoxShadow>[
+                                                                    //                   //   BoxShadow(
+                                                                    //                   //       color: Colors.black,
+                                                                    //                   //       offset: Offset(0, 4),
+                                                                    //                   //       blurRadius: 10,
+                                                                    //                   //       spreadRadius: 2)
+                                                                    //                   // ],
+                                                                    //                   // border: Border.all(color: Colors.grey, width: 2),
+                                                                    //                   image: DecorationImage(
+                                                                    //                     image: NetworkImage(
+                                                                    //                       oferta.docs[i]["urlImage"],
+                                                                    //                       ),
+                                                                    //                       fit: BoxFit.fill,),
+                                                                    //
+                                                                    //                   ),
+                                                                    //                 ),
+                                                                    //               SizedBox(
+                                                                    //                 width: 30,
+                                                                    //               ),
+                                                                    //               Column(
+                                                                    //                 mainAxisAlignment: MainAxisAlignment.start,
+                                                                    //
+                                                                    //                 children: <Widget>[
+                                                                    //                   Text(
+                                                                    //                     oferta.docs[i]["nombre"],
+                                                                    //                     style: TextStyle(
+                                                                    //                         fontSize: 20,
+                                                                    //                         color: Colors
+                                                                    //                             .white),
+                                                                    //
+                                                                    //
+                                                                    //                     //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+                                                                    //
+                                                                    //
+                                                                    //                   ),
+                                                                    //                 ]
+                                                                    //               ),
+                                                                    //
+                                                                    //             ],
+                                                                    //           ),
+                                                                    //         ),
+                                                                    //   ],
+                                                                    //
+                                                                    // ),
+                                                                    child: Stack(
+                                                                      children: <Widget>[
+                                                                        Container(
+                                                                          padding: EdgeInsets.symmetric(horizontal: 5),
+                                                                          child: Align(
+                                                                            alignment: Alignment.bottomLeft,
+
+                                                                            child: Container(
+                                                                              height: 45,
+                                                                              width: 45,
+                                                                              decoration: BoxDecoration(
+                                                                                borderRadius: BorderRadius
+                                                                                    .all(Radius
+                                                                                    .circular(12)),
+                                                                                color: Colors.white,
+                                                                              ),
+
+                                                                              child: Stack(
+                                                                                children: <Widget>[
+                                                                                  Align(
+                                                                                    alignment: Alignment.center,
+                                                                                    child: IconButton(
+                                                                                      iconSize: 30,
+                                                                                      onPressed: (){
+
+                                                                                        if(isfav){
+                                                                                          bool vote = false;
+                                                                                          setState(() {
+                                                                                            isfav = false;
+                                                                                            FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('ofertas').doc(oferta.docs[i].id).delete();
+                                                                                            BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
+                                                                                          });
+
+                                                                                        }else{
+                                                                                          bool vote = true;
+                                                                                          setState(() {
+
+                                                                                            isfav = true;
+                                                                                            DatabaseConnect(uid: user.uid).likeOferta(oferta.docs[i].id,isfav,true,false,oferta.docs[i]["limite"]);
+                                                                                            BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
+                                                                                            ScaffoldMessenger.of(context)
+                                                                                                .showSnackBar(SnackBar(
+                                                                                                content: Text(
+                                                                                                    'Te gusta ${oferta.docs[i]["nombre"]}')));
+                                                                                          });
+                                                                                        }
+
+                                                                                      },
+                                                                                      icon: Icon(isfav
+                                                                                          ? Icons.favorite
+                                                                                          : Icons.favorite_border),
+                                                                                      color: Color(0xff2C73D2),
+                                                                                    ),
+                                                                                  ),
+                                                                                ],
+                                                                              ),
+                                                                            ),
+
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+
+                                                                ),
+                                                                back: Card(
+                                                                  shape: RoundedRectangleBorder(
+                                                                    borderRadius: BorderRadius
+                                                                        .all(Radius
+                                                                        .circular(5)),
+                                                                  ),
+                                                                  child: Container(
+                                                                    width: MediaQuery.of(context).size.width,
+                                                                    // height: 50,
+                                                                    padding: EdgeInsets
+                                                                        .symmetric(
+                                                                        vertical: 20),
+                                                                    alignment: Alignment
+                                                                        .center,
+                                                                    //
+                                                                    child: Stack(
+                                                                      children: <Widget>[
+                                                                        Container(
+                                                                          // height: ,
+                                                                          width: MediaQuery.of(context).size.width,
+                                                                          // color: Colors.amber,
+                                                                          child: Row(
+                                                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                                                            // mainAxisAlignment: MainAxisAlignment.center,
+
+                                                                            children: <Widget>[
+                                                                              Container(
+                                                                                  width: 200,
+                                                                                  // height: 200,
+                                                                                  child: InkWell(
+                                                                                    onTap: (){
+                                                                                      showDialog(
+                                                                                          barrierDismissible: true,
+                                                                                          context: context,
+                                                                                          builder: (context) {
+                                                                                            return AlertDialog(
+                                                                                              elevation: 24,
+                                                                                              title: Text(
+                                                                                                  "¿Quieres usar la oferta?"
+                                                                                              ),
+                                                                                              content: Row(
+                                                                                                children: <Widget>[
+                                                                                                  Container(
+                                                                                                    width: 130,
+                                                                                                    height: 130,
+                                                                                                    child: QrImage(
+                                                                                                      data: oferta.docs[i].id,
+                                                                                                      size: MediaQuery
+                                                                                                          .of(context)
+                                                                                                          .size
+                                                                                                          .height,
+                                                                                                    ),
+                                                                                                  ),
+                                                                                                  SizedBox(
+
+                                                                                                    height: 120,
+                                                                                                    child: Column(
+                                                                                                        mainAxisAlignment: MainAxisAlignment
+                                                                                                            .center,
+                                                                                                        crossAxisAlignment: CrossAxisAlignment
+                                                                                                            .start,
+                                                                                                        children: <Widget>[
+                                                                                                          SizedBox(
+                                                                                                            height: 40,
+                                                                                                            // width: 200,
+                                                                                                            child: Text(
+                                                                                                              oferta.docs[i]["nombre"],
+                                                                                                              style: TextStyle(
+                                                                                                                  fontSize: 15,
+                                                                                                                  color: Colors
+                                                                                                                      .black54),
+                                                                                                            ),
+                                                                                                          ),
+                                                                                                          SizedBox(
+                                                                                                            height: 40,
+                                                                                                            // width: 200,
+                                                                                                            child: Text(
+                                                                                                              "GTQ ${oferta.docs[i]["valor"]}",
+                                                                                                              style: TextStyle(
+                                                                                                                  fontSize: 15,
+                                                                                                                  color: Colors
+                                                                                                                      .black54),
+                                                                                                            ),
+                                                                                                          ),
+
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                  ),
+
+                                                                                                ],
+                                                                                              ),
+                                                                                              actions: [
+                                                                                                TextButton(
+                                                                                                  onPressed: () {
+                                                                                                    Navigator.pop(
+                                                                                                        context);
+                                                                                                  },
+                                                                                                  child: Text("No"),
+                                                                                                ),
+                                                                                                TextButton(
+                                                                                                  onPressed: () {
+                                                                                                    bool vote = true;
+                                                                                                    BusinessDatabaseConnect()
+                                                                                                        .useOferta(
+                                                                                                        pageid,
+                                                                                                        oferta.docs[i].id,
+                                                                                                        vote);
+                                                                                                    Navigator.pop(
+                                                                                                        context);
+                                                                                                  },
+                                                                                                  child: Text("Si"),
+                                                                                                ),
+
+                                                                                              ],
+                                                                                            );
+                                                                                          }
+                                                                                      );
+                                                                                    },
+                                                                                    child: QrImage(
+                                                                                      data: oferta.docs[i].id,
+                                                                                      size: MediaQuery
+                                                                                          .of(context)
+                                                                                          .size
+                                                                                          .height,
+                                                                                    ),
+                                                                                  )
+                                                                                // child: QrImage(
+                                                                                //   data: oferta.docs[i].id,
+                                                                                //   size: MediaQuery.of(context).size.height,
+                                                                                // ),
+                                                                              ),
+                                                                              SizedBox(
+                                                                                width: 30,
+                                                                              ),
+                                                                              Column(
+                                                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                                                  children: <Widget>[
+                                                                                    Text(
+                                                                                      oferta.docs[i]["nombre"],
+                                                                                      style: TextStyle(
+                                                                                          fontSize: 20,
+                                                                                          color: Colors
+                                                                                              .black54),
+                                                                                    ),
+                                                                                    SizedBox(
+                                                                                      height: 20,
+                                                                                    ),
+                                                                                    Text(
+                                                                                      "GTQ ${oferta.docs[i]["valor"]}",
+                                                                                      style: TextStyle(
+                                                                                          fontSize: 20,
+                                                                                          color: Colors
+                                                                                              .black54),
+                                                                                    ),
+                                                                                  ]
+                                                                              ),
+
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      ],
+
+                                                                    ),
+                                                                  ),
+
+                                                                ),
+                                                              ),
+
+
+                                                            );
+                                                          }
+                                                      ),
+                                                      // child:
+                                                    );
+                                                  }
+                                              ),
+                                              SizedBox(height: 10),
+                                              Container(
+                                                width: MediaQuery
+                                                    .of(context)
+                                                    .size
+                                                    .width * 0.9,
+                                                height: 300,
                                                 decoration: BoxDecoration(
+
                                                   borderRadius: new BorderRadius
-                                                        .all(
+                                                      .all(
                                                     Radius.circular(10),
                                                   ),
-                                                  color: Colors.white,
+                                                  color: Color(0xffefeeec),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                    color: Colors.black26
-                                                        .withOpacity(0.5),
-                                                    spreadRadius: 5,
-                                                    blurRadius: 7,
-                                                    offset: Offset(0, 3), // changes position of shadow
+                                                      color: Colors.black12
+                                                          .withOpacity(0.5),
+                                                      spreadRadius: 1,
+                                                      blurRadius: 7,
+                                                      offset: Offset(0,
+                                                          3), // changes position of shadow
                                                     ),
                                                   ],
                                                 ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: <Widget>[
 
-                                                    Container(
+                                                child: Center(
+                                                  child: Stack(
+                                                      children: [
+                                                        Container(
+                                                          padding: EdgeInsets.all(
+                                                              5),
+                                                          decoration: BoxDecoration(
 
-                                                      height: 50,
-                                                      width: 50,
-                                                      decoration: BoxDecoration(
-
-                                                        borderRadius: new BorderRadius.all(
-                                                          const Radius.circular(
-                                                              10),
+                                                            borderRadius: new BorderRadius
+                                                                .all(
+                                                              Radius.circular(10),
+                                                            ),
+                                                          ),
+                                                          child: GoogleMap(
+                                                            zoomGesturesEnabled: true,
+                                                            markers: markersMap,
+                                                            onMapCreated: onMapCreated,
+                                                            initialCameraPosition: CameraPosition(
+                                                              target: LatLng(
+                                                                  inlat, inlng),
+                                                              zoom: 12,
+                                                            ),
+                                                            myLocationButtonEnabled: false,
+                                                            zoomControlsEnabled: true,
+                                                          ),
                                                         ),
-                                                        // color: Color(0xff055475),
-                                                        image: DecorationImage(
-                                                          image: AssetImage(
-                                                              "assets/images/ig.png"),
-                                                          fit: BoxFit.fill,
 
+                                                      ]
+                                                  ),
+                                                ),
+
+                                              ),
+                                              SizedBox(height: 50),
+                                              Container(
+
+                                                // padding: EdgeInsets
+                                                //     .symmetric(
+                                                //     horizontal: 10),
+                                                // width: MediaQuery
+                                                //     .of(context)
+                                                //     .size
+                                                //     .width * 0.9,
+                                                // height: 500,
+                                                // decoration: BoxDecoration(
+                                                //
+                                                //   borderRadius: new BorderRadius
+                                                //       .all(
+                                                //     Radius.circular(10),
+                                                //   ),
+                                                //   color: Color(0xffc3d3e3),
+                                                //   boxShadow: [
+                                                //     BoxShadow(
+                                                //       color: Colors.black54
+                                                //           .withOpacity(0.5),
+                                                //       spreadRadius: 5,
+                                                //       blurRadius: 7,
+                                                //       offset: Offset(0,
+                                                //           3), // changes position of shadow
+                                                //     ),
+                                                //   ],
+                                                // ),
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child:Wrap(
+                                                    // shrinkWrap: true,
+                                                      children: <Widget>[
+                                                        SizedBox(
+                                                          height: 10,
                                                         ),
-                                                      ),
+                                                        SizedBox(
+                                                        height: 640,
+                                                        child: PageView.builder(
+                                                          itemCount: sucursalesList.length,
+                                                          controller: PageController(viewportFraction: 0.9),
+                                                          onPageChanged: (
+                                                          int index) =>
+                                                          setState(() =>
+                                                          idx = index),
+                                                          itemBuilder: (_, i) {
+                                                            print(sucursalesList[i]['id']);
+                                                            return updateSucursal(sucursalesList[i]['id']);
+                                                          }
+                                                          ),
+                                                        ),
+
+                                                        // DropdownButton<String>(
+                                                        //   hint: new Text("Seleccionar Sucursal"),
+                                                        //   value: sucursal,
+                                                        //   onChanged: (String newStore){
+                                                        //     setState(() {
+                                                        //       sucursalid = newStore;
+                                                        //       // sucursal=newStore;
+                                                        //       // sucursalid = sucursalNombre;
+                                                        //     });
+                                                        //
+                                                        //     // print("sucursal ${sucursalNombre}");
+                                                        //
+                                                        //   },
+                                                        //   items: sucursalesList.map((sucursal){
+                                                        //     return new DropdownMenuItem(
+                                                        //       child: new Text(sucursal['nombre']),
+                                                        //       value: sucursal['id'].toString(),
+                                                        //     );
+                                                        //   }
+                                                        //
+                                                        //   ).toList(),
+                                                        //
+                                                        // ),
+                                                        // if(!(sucursalid == null||sucursalid=="")) updateSucursal(sucursalid),
 
 
-                                                      child: InkWell(
-                                                        onTap: (){
+                                                      ]
+                                                  ),
 
-                                                          launchApp(data["instagram"]);
-                                                        },
+                                                ),
 
-                                                      ),
+                                              ),
+                                              SizedBox(height: 10),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 45),
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                                  // width: 400,
+                                                  height: 60,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: new BorderRadius
+                                                        .all(
+                                                      Radius.circular(10),
                                                     ),
-                                                    SizedBox(width: 10,),
-                                                    Container(
-                                                      height: 50,
-                                                      width: 50,
-                                                      decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black26
+                                                            .withOpacity(0.5),
+                                                        spreadRadius: 5,
+                                                        blurRadius: 7,
+                                                        offset: Offset(0, 3), // changes position of shadow
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: <Widget>[
 
-                                                        borderRadius: new BorderRadius.all(
-                                                          const Radius.circular(
-                                                          10),
+                                                      Container(
 
+                                                        height: 50,
+                                                        width: 50,
+                                                        decoration: BoxDecoration(
+
+                                                          borderRadius: new BorderRadius.all(
+                                                            const Radius.circular(
+                                                                10),
+                                                          ),
+                                                          // color: Color(0xff055475),
+                                                          image: DecorationImage(
+                                                            image: AssetImage(
+                                                                "assets/images/ig.png"),
+                                                            fit: BoxFit.fill,
+
+                                                          ),
                                                         ),
-                                                        // color: Color(0xff055475),
-                                                        image: DecorationImage(
-                                                        image: AssetImage(
-                                                        "assets/images/fb.png"),
-                                                        fit: BoxFit.fill,
+
+
+                                                        child: InkWell(
+                                                          onTap: (){
+
+                                                            launchApp(data["instagram"]);
+                                                          },
 
                                                         ),
                                                       ),
+                                                      SizedBox(width: 10,),
+                                                      Container(
+                                                        height: 50,
+                                                        width: 50,
+                                                        decoration: BoxDecoration(
+
+                                                          borderRadius: new BorderRadius.all(
+                                                            const Radius.circular(
+                                                                10),
+
+                                                          ),
+                                                          // color: Color(0xff055475),
+                                                          image: DecorationImage(
+                                                            image: AssetImage(
+                                                                "assets/images/fb.png"),
+                                                            fit: BoxFit.fill,
+
+                                                          ),
+                                                        ),
 
 
-                                                      child: InkWell(
+                                                        child: InkWell(
                                                           onTap: (){
 
                                                             launchApp(data["facebook"]);
-                                                            },
-
-                                                      ),
-                                                    ),
-                                                    SizedBox(width: 10,),
-                                                    Container(
-                                                      height: 50,
-                                                      width: 50,
-                                                      decoration: BoxDecoration(
-
-                                                        borderRadius: new BorderRadius.all(
-                                                          const Radius.circular(
-                                                              10),
-
-                                                        ),
-                                                        // color: Color(0xff055475),
-                                                        image: DecorationImage(
-                                                          image: AssetImage(
-                                                              "assets/images/tw.png"),
-                                                          fit: BoxFit.fitHeight,
+                                                          },
 
                                                         ),
                                                       ),
+                                                      SizedBox(width: 10,),
+                                                      Container(
+                                                        height: 50,
+                                                        width: 50,
+                                                        decoration: BoxDecoration(
+
+                                                          borderRadius: new BorderRadius.all(
+                                                            const Radius.circular(
+                                                                10),
+
+                                                          ),
+                                                          // color: Color(0xff055475),
+                                                          image: DecorationImage(
+                                                            image: AssetImage(
+                                                                "assets/images/tw.png"),
+                                                            fit: BoxFit.fitHeight,
+
+                                                          ),
+                                                        ),
 
 
-                                                      child: InkWell(
-                                                        onTap: (){
+                                                        child: InkWell(
+                                                          onTap: (){
 
-                                                          launchApp(data["twitter"]);
-                                                        },
+                                                            launchApp(data["twitter"]);
+                                                          },
 
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            SizedBox(height: 10),
-                                          ],
+                                              SizedBox(height: 10),
+                                            ],
+                                          ),
                                         ),
-                                      ),
 
-                                    ],
-                                  ),
-
+                                      ],
+                                    ),
 
 
 
 
-                                ]))
-                              ],
+
+                                  ]))
+                                ],
+                              ),
+
                             );
+
 
                           });
 
