@@ -19,4 +19,10 @@ class SearchService {
     return FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').doc(searchField).get();
   }
 
+
+
+
+ 
+
+
 }

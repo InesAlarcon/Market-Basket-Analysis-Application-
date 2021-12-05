@@ -397,12 +397,15 @@ class GustosMenuState extends State<GustosMenu> {
 
 
                                 },
-                                background: Container(color: Colors.red),
+                                background: Container(color: Colors.red,
+                                    margin: EdgeInsets.symmetric(vertical: 6),
+                              ),
+
                                 child: new Container(
                                     child: Padding(
-                                      padding: EdgeInsets.only(top: 8.0),
+                                      padding: EdgeInsets.only(top: 0.0),
                                         child: Card(
-                                          margin: EdgeInsets.fromLTRB(20.0, 6.0, 20.0, 0.0),
+                                          margin: EdgeInsets.symmetric(vertical: 6, horizontal: 20),
                                             child: ListTile(
                                               title: Text(
                                                 listaGusto[index],

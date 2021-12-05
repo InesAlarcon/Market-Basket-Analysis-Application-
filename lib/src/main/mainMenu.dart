@@ -2,6 +2,8 @@
 
 import 'dart:async';
 import 'dart:developer';
+// ignore: avoid_web_libraries_in_flutter
+// import 'dart:html';
 import 'dart:math' as math; // import this
 import 'dart:typed_data';
 import 'package:cliente/src/main/ofertas/ofertasList.dart';
@@ -766,7 +768,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
           // print(snapshot1.docs.length);
 
           return SizedBox(
-            height: 500,
+            height: 450,
             child: ListView.builder(
                 itemCount: snapshot1.docs.length,
                 // ignore: missing_return
@@ -1427,16 +1429,22 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
             finalList.add(OfertaList.fromFirestore(event.docs[j]));
           }else{
             if(finalList.length!=listaOferts.length){
-              finalList.add(OfertaList.fromFirestore(event.docs[j]));
+              if(finalList.length<listaOferts.length){
+                finalList.add(OfertaList.fromFirestore(event.docs[j]));
+              }else if(finalList.length>listaOferts.length){
+                  finalList.toSet().toList();
+                // for(int m = 0; m<finalList.length; m++){
+                //     if((finalList[m].id==event.docs[j].id)){
+                //       finalList.removeAt(m);
+                //     }
+                //   }
+              }
+
 
             }
             print(listaOferts.length);
             print(finalList.length);
-            // for(int m = 0; m<finalList.length; m++){
-            //   if((finalList[m].id==event.docs[j].id)){
-            //     finalList.removeAt(m);
-            //   }
-            // }
+            //
           }
 
 
@@ -1653,25 +1661,34 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
         ),
         Column(
           children: <Widget>[
-
-            FutureBuilder<Widget>(
-              future: showOfertas(context, oferta, user, busoferta),
-              builder: (context,AsyncSnapshot<Widget> snapshot){
-
-                if(snapshot.hasData)
-                  return snapshot.data;
-
-                return Container(child: CircularProgressIndicator(),);
-              },
-
-
-            ),
-            SizedBox(
+            Container(
               height: 40,
-
+              width: MediaQuery.of(context).size.width,
+              color:Color(0xff2C73D2),
+              child: Text(
+                "Categorias",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
+            // FutureBuilder<Widget>(
+            //   future: showOfertas(context, oferta, user, busoferta),
+            //   builder: (context,AsyncSnapshot<Widget> snapshot){
+            //
+            //     if(snapshot.hasData)
+            //       return snapshot.data;
+            //
+            //     return Container(child: CircularProgressIndicator(),);
+            //   },
+            //
+            //
+            // ),
+
             SizedBox(
-              height: 400,
+              height: 660,
               child: ListView.builder(
                   itemCount: gridList.length,
                   itemBuilder: (BuildContext context, int index) {
@@ -2960,10 +2977,24 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                             background(),
 
 
+
                             Column(
 
                               // shrinkWrap: true,
                               children: <Widget>[
+                                Container(
+                                  height: 40,
+                                  width: MediaQuery.of(context).size.width,
+                                  color:Color(0xff2C73D2),
+                                  child: Text(
+                                    "Ofertas y Negocios",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
 
                                 // SizedBox(
                                 //   height: 200,
@@ -3713,6 +3744,26 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                                   child: TabPageSelector(controller: _controller),
 
                                 ),
+                                // SizedBox(
+                                //   height: 450,
+                                //   child: PageView(
+                                //     children: <Widget>[
+                                //       StreamBuilder<QuerySnapshot>(
+                                //           stream: FirebaseFirestore.instanceFor(
+                                //               app: Firebase.app('businessApp')).collection(
+                                //               'empresa').snapshots(),
+                                //           builder: (context, snapshot1) {
+                                //             if (!snapshot1.hasData)
+                                //               return LinearProgressIndicator();
+                                //             return Expanded(child: buildListRec(
+                                //                 snapshot1.data, snapshot2.data, user.uid));
+                                //           }
+                                //       ),
+                                //       buildListGus(user.uid,snapofer.data, snapshot2.data, busoferta.data),
+                                //     ],
+                                //   ),
+                                // ),
+
                                 StreamBuilder<QuerySnapshot>(
                                     stream: FirebaseFirestore.instanceFor(
                                         app: Firebase.app('businessApp')).collection(
@@ -3740,7 +3791,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
                         ),
 
-                        // buildListGus(user.uid,snapofer.data, snapshot2.data, busoferta.data),
+                        buildListGus(user.uid,snapofer.data, snapshot2.data, busoferta.data),
 
                       ],
 
