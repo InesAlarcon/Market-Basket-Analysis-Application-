@@ -261,22 +261,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
             horizontal: 20
         ),
         decoration: BoxDecoration(
-            // border: Border(
-            //   top: BorderSide(
-            //     color: Colors.white,
-            //     width: 10,
-            //   ),
-            //   left: BorderSide(
-            //       color: Colors.white,
-            //       width: 10,
-            //   ),
-            //   right: BorderSide(
-            //     color: Colors.white,
-            //     width: 10,
-            //   ),
-            // ),
-            //
-            // border: Border.all(color: Colors.white),
+
             borderRadius: new BorderRadius.only(
               topLeft: const Radius.circular(20),
               topRight: const Radius.circular(20),
