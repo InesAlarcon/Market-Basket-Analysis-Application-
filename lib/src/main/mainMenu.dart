@@ -1,8 +1,11 @@
 // @dart=2.9
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:math' as math; // import this
 import 'dart:typed_data';
+import 'package:cliente/src/main/ofertas/ofertasList.dart';
+import 'package:cliente/src/services/ofertaList.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -51,7 +54,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
   getToken(String user) async {
     String token = await FirebaseMessaging.instance.getToken();
-    print(token);
+    // print(token);
 
     if(token!=null){
       var tokenRef = FirebaseFirestore.instance.collection("usuario").doc(user).update(
@@ -90,10 +93,11 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
   bool inLogin = false;
   var ofertaData = [];
   var oferList = [];
+  var listaOferts = [];
 
 
   var listaRecRating = [];
-  var finalList = [];
+  static var finalList = [];
   var allTags =[];
 
 
@@ -104,15 +108,16 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
     // fetchOfertas();
 
 
-    _controller = TabController(length: ofertaData.length, vsync: this);
+    _controller = TabController(length: listaOferts.length, vsync: this);
     controller.addListener(rebuild);
     Timer.periodic(Duration(seconds: 7), (Timer timer) {
 
-      if(ofertaData.length==0){
+      if(listaOferts.length==0){
         _currentPage = 0;
       }else{
-        if (_currentPage < ofertaData.length) {
+        if (_currentPage < listaOferts.length) {
           _currentPage++;
+          // print(ofertaData.length);
           // print(_currentPage);
         } else {
           _currentPage = 0;
@@ -428,7 +433,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
           Container(
           child: Card(
             margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-            color: Color(0xcaFF9671),
+            color: Color(0xca63c4ff),
               child: ListTile(
                 title: Text('Suscripciones', style: TextStyle(color: Colors.white, fontSize: 20),),
                 onTap: (){
@@ -451,27 +456,29 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
             ),
           ),
 
-          Container(
-            child: Card(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-
-              color: Color(0xca63c4ff),
-              child: ListTile(
-                 title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => CalificarCompra()));
-                },
-                  ),
-            ),
-          ),
+          // Container(
+          //   child: Card(
+          //     margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          //
+          //     color: Color(0xca63c4ff),
+          //     child: ListTile(
+          //        title: Text('Calificar Compras', style: TextStyle(color: Colors.white, fontSize: 20),),
+          //       onTap: (){
+          //         Navigator.push(context, MaterialPageRoute(builder: (context) => CalificarCompra()));
+          //       },
+          //         ),
+          //   ),
+          // ),
           Container(
             child: Card(
               margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
 
               color: Color(0xca48e06c),
               child: ListTile(
-                    title: Text('Puntos', style: TextStyle(color: Colors.white, fontSize: 20),),
-
+                    title: Text('Ofertas', style: TextStyle(color: Colors.white, fontSize: 20),),
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => OfertasList()));
+                },
                 ),
               ),
             ),
@@ -497,6 +504,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
 
   Widget buildListRec(QuerySnapshot snapshot1, QuerySnapshot snapshot2, String uid){
+
     final user = Provider.of<Usuario>(context);
     var listaFiltro = [];
     // print(snapshot2.size);
@@ -753,7 +761,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
         stream: FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('suscripciones').snapshots(),
         builder: (context, snapshotSus) {
           var sus = snapshotSus.data;
-
+          // print(snapshot1.docs.length);
 
           return SizedBox(
             height: 500,
@@ -762,7 +770,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                 // ignore: missing_return
                 itemBuilder: (context, index){
                   bool issub = false;
-                  // print(snapshot1.docs[index].id);
+                  // print(snapshot1.docs.length);
                   // print(sus.docs.length);
 
                   if(sus.docs.length==1){
@@ -773,7 +781,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                       changeIconSub();
                     }
                   }else if (sus.docs.length>1){
-                    for (int j = 0; j < snapshot2.docs.length; j++) {
+                    for (int j = 0; j < sus.docs.length; j++) {
                       if (sus.docs[j].id == snapshot1.docs[index].id) {
                         issub = true;
                         changeIconSub();
@@ -1378,12 +1386,63 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
   fetchOfertas() async {
     List listaEmpresas = await FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('ofertas').get().then((value) => value.docs);
+    // print(listaEmpresas.length);
+
+
     for(int i=0;i<listaEmpresas.length;i++){
+      // print(listaEmpresas.length);
       // print(listaEmpresas[i].id);
+
+      // FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
+      //     listaEmpresas[i].toString()).collection("ofertas").snapshots().listen((event) {
+      //       var docs = event.docs;
+      //       for(var Doc in docs){
+      //         finalList.add(OfertaList.fromFirestore(Doc));
+      //       }
+      //   // event.docs.forEach((element) {finalList.add(OfertaList.fromFirestore(element));});
+      // });
+
+      // FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
+      //     listaEmpresas[i].toString()).collection("ofertas").snapshots().listen(addList);
+
+        // event.docs.forEach((element) {finalList.add(OfertaList.fromFirestore(element));});
+
+
+
+
       FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
           listaEmpresas[i].id.toString()
       ).collection("ofertas").snapshots().listen((event) {
 
+        for(int k = 0; k<event.size;k++){
+          listaOferts.add(event.docs[k].id);
+        }
+        listaOferts=listaOferts.toSet().toList();
+
+        var docs = event.docs;
+        for(int j = 0; j<docs.length;j++){
+          if(finalList.isEmpty){
+            finalList.add(OfertaList.fromFirestore(event.docs[j]));
+          }else{
+            if(finalList.length!=listaOferts.length){
+              finalList.add(OfertaList.fromFirestore(event.docs[j]));
+
+            }
+            print(listaOferts.length);
+            print(finalList.length);
+            // for(int m = 0; m<finalList.length; m++){
+            //   if((finalList[m].id==event.docs[j].id)){
+            //     finalList.removeAt(m);
+            //   }
+            // }
+          }
+
+
+
+
+          // finalList.add(docs[j].id.toString());
+        }
+        // print(ofertaData.length);
         ofertaData = event.docs.map((e) => {
           "pageid": listaEmpresas[i].id.toString(),
           "id": e.id,
@@ -1399,11 +1458,21 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
         }).toList();
         // print(ofertaData);
+        // print(ofertaData.length);
         // oferList=ofertaData;
       });
     }
+    // print("LIST${finalList}");
+    // print(finalList[0].id);
   }
 
+  // addList(QuerySnapshot snap) async{
+  //   var docs = snap.docs;
+  //   for(var Doc in docs){
+  //     finalList.add(OfertaList.fromFirestore(Doc));
+  //   }
+  //   // print(finalList.length);
+  // }
 
   fetchGustos() async {
     List listaEmpresas = await FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('empresa').get().then((value) => value.docs);
@@ -1567,7 +1636,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
         });
   }
 
-  Widget buildListGus(String user, QuerySnapshot oferta, QuerySnapshot docGus){
+  Widget buildListGus(String user, QuerySnapshot oferta, QuerySnapshot docGus, QuerySnapshot busoferta){
     var gridList = finalTagList.toSet().toList();
 
 
@@ -1584,7 +1653,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
           children: <Widget>[
 
             FutureBuilder<Widget>(
-              future: showOfertas(context, oferta, user),
+              future: showOfertas(context, oferta, user, busoferta),
               builder: (context,AsyncSnapshot<Widget> snapshot){
 
                 if(snapshot.hasData)
@@ -1738,25 +1807,60 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
   }
 
-  Future<Widget> showOfertas(BuildContext context, QuerySnapshot snapoferta, String user) async{
+  Future<Widget> showOfertas(BuildContext context, QuerySnapshot snapoferta, String user, QuerySnapshot ofertas) async{
 
+    var oferList = [];
+    var listFinal =[];
+    var busofertas = [];
+    busofertas = ofertas.docs.map((e) => e.id).toList();
+
+
+
+    //
+    // for(int i=0; i<busofertas.length;i++){
+    //   FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
+    //       busofertas[i]).collection("ofertas").snapshots().listen((event) {
+    //     var docs = event.docs;
+    //     for(var Doc in docs){
+    //       listFinal.add(OfertaList.fromFirestore(Doc));
+    //     }
+    //   });
+    // }
+    //
+    // finalList.toSet();
+    // print(lis);
+
+    // print(busofertas[0]);
     if(ofertaData.isEmpty){
-      fetchOfertas();
+     fetchOfertas();
+    }
+    //
+    // print(finalList.length);
+    // print(listaOferts);
+
+
+
+    // var ofer = ofertaData;
+
+    var ofer = [];
+
+    if(ofer.length!=listaOferts.length){
+      ofer = finalList;
     }
 
 
-    var ofer = ofertaData.toSet().toList();
-    // print(ofer.length);
+    // print(ofertaData.length);
     // var ofertas = finalOfertasList.toSet().toList();
     int idx = 0;
 
-    // rebuild();
+
+
 
     for(int k = 0;k<ofer.length;k++){
-      if(ofer[k]["estado"]=="activo"){
+      if(ofer[k].estado=="activo"){
         for(int m=0;m<snapoferta.size;m++){
 
-          if(snapoferta.docs[m]["ofertaID"]==ofer[k]["id"]){
+          if(snapoferta.docs[m]["ofertaID"]==ofer[k].id){
 
             if((snapoferta.docs[m]["limite"]==0)||(snapoferta.docs[m]["estado"]==false)){
               // print("USUARIO ${snapoferta.docs[m]["ofertaID"]}");
@@ -1766,24 +1870,23 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
               //     .likeOferta(
               //     snapoferta.docs[m]["ofertaID"],true,true,false,snapoferta.docs[m]["limite"]);
               ofer.removeAt(k);
-              ofertaData.removeAt(k);
+              
+
+              // ofertaData.removeAt(k);
 
             }
           }
 
         }
       }else{
-
         for(int m=0;m<snapoferta.size;m++) {
-          if (snapoferta.docs[m]["ofertaID"] == ofer[k]["id"]) {
-            DatabaseConnect(
-                  uid: user)
-                  .likeOferta(
-                  snapoferta.docs[m]["ofertaID"],true,false,false,snapoferta.docs[m]["limite"]);
-
-
+          if (snapoferta.docs[m]["ofertaID"] == ofer[k].id) {
+            DatabaseConnect(uid: user).likeOferta(snapoferta.docs[m]["ofertaID"],true,false,false,snapoferta.docs[m]["limite"],snapoferta.docs[m]["urlImage"],snapoferta.docs[m]["nombre"],snapoferta.docs[m]["valor"],snapoferta.docs[m]["idEmpresa"]);
           }
         }
+        ofer.removeAt(k);
+
+
       }
 
 
@@ -1791,7 +1894,456 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
     }
 
+
+
     // print(ofer.length);
+    // for(int i =0; i<busofertas.length; i++){
+    //   StreamBuilder<QuerySnapshot>(
+    //     stream: FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(busofertas[i]).collection("ofertas").snapshots(),
+    //     builder: (context, ofertBuild){
+    //
+    //
+    //
+    //       for(int k=0;k<ofertBuild.data.size;k++){
+    //         print(ofertBuild.data.docs[k].id);
+    //       }
+    //       print(oferList);
+    //
+    //       return SizedBox();
+    //
+    //       // return SizedBox(
+    //       //   height: 200,
+    //       //   child: InfinityPageView(
+    //       //       itemCount: ofer.length,
+    //       //       controller: _pageController,
+    //       //       onPageChanged: (int index) {
+    //       //
+    //       //         setState(() {
+    //       //           idx = index;
+    //       //           _incrementCounter(index);
+    //       //         });
+    //       //
+    //       //
+    //       //       },
+    //       //
+    //       //       itemBuilder: (_, i) {
+    //       //         // print("LENGTH ${ofertaData.length}");// print(i);
+    //       //         bool isfav = false;
+    //       //         if(snapoferta.size == 0){
+    //       //
+    //       //           isfav = false;
+    //       //           changeIconFav();
+    //       //
+    //       //         }
+    //       //         else{
+    //       //           for (int j = 0; j < snapoferta.size; j++) {
+    //       //             if(ofer.length==0){
+    //       //               isfav = false;
+    //       //               changeIconFav();
+    //       //
+    //       //             }else{
+    //       //               if (snapoferta.docs[j]["ofertaID"] == ofer[i]["id"]) {
+    //       //                 isfav = true;
+    //       //                 changeIconFav();
+    //       //               }
+    //       //             }
+    //       //
+    //       //           }
+    //       //
+    //       //         }
+    //       //         return Padding(
+    //       //           padding: EdgeInsets
+    //       //               .symmetric(
+    //       //               horizontal: 7),
+    //       //
+    //       //           child: FlipCard(
+    //       //             direction: FlipDirection.VERTICAL,
+    //       //             front: Card(
+    //       //               shape: RoundedRectangleBorder(
+    //       //                 borderRadius: BorderRadius
+    //       //                     .all(Radius
+    //       //                     .circular(5)),
+    //       //               ),
+    //       //               child: Container(
+    //       //                 width: MediaQuery
+    //       //                     .of(context)
+    //       //                     .size
+    //       //                     .width,
+    //       //                 // height: 50,
+    //       //                 padding: EdgeInsets
+    //       //                     .symmetric(
+    //       //                     vertical: 0),
+    //       //                 alignment: Alignment
+    //       //                     .center,
+    //       //                 decoration: BoxDecoration(
+    //       //                   borderRadius: BorderRadius
+    //       //                       .all(Radius
+    //       //                       .circular(
+    //       //                       5)),
+    //       //                   // boxShadow: <BoxShadow>[
+    //       //                   //   BoxShadow(
+    //       //                   //       color: Colors.black,
+    //       //                   //       offset: Offset(0, 4),
+    //       //                   //       blurRadius: 10,
+    //       //                   //       spreadRadius: 2)
+    //       //                   // ],
+    //       //                   // border: Border.all(color: Colors.grey, width: 2),
+    //       //                   image: imagePick(ofer[i]["urlImage"]),
+    //       //
+    //       //
+    //       //                 ),
+    //       //
+    //       //                 child: Stack(
+    //       //                   children: <Widget>[
+    //       //                     Container(
+    //       //                         padding: EdgeInsets.symmetric(horizontal: 20),
+    //       //                         child: Align(
+    //       //                           alignment: Alignment.topRight,
+    //       //                           child: Stack(
+    //       //                             children: <Widget>[
+    //       //                               // Stroked text as border.
+    //       //                               Text(
+    //       //                                 ofer[i]["nombre"],
+    //       //                                 style: GoogleFonts.oswald(
+    //       //                                   foreground:  Paint()
+    //       //                                     ..style = PaintingStyle.stroke
+    //       //                                     ..strokeWidth = 2
+    //       //                                     ..color = Colors.black54,
+    //       //                                   textStyle: Theme.of(context).textTheme.headline4,
+    //       //                                   fontSize: 25,
+    //       //                                   fontWeight: FontWeight.w400,
+    //       //
+    //       //                                 ),
+    //       //                                 // textAlign: TextAlign.center,
+    //       //                               ),
+    //       //                               // Solid text as fill.
+    //       //                               Text(
+    //       //                                 ofer[i]["nombre"],
+    //       //                                 style: GoogleFonts.oswald(
+    //       //                                   shadows: <Shadow>[
+    //       //                                     Shadow(
+    //       //                                       offset: Offset(3.5, 3.5),
+    //       //                                       blurRadius: 3.0,
+    //       //                                       color: Color.fromARGB(255, 0, 0, 0),
+    //       //                                     ),
+    //       //                                   ],
+    //       //                                   textStyle: Theme.of(context).textTheme.headline4,
+    //       //                                   fontSize: 25,
+    //       //                                   fontWeight: FontWeight.w400,
+    //       //                                   color: Colors.white.withOpacity(0.9),
+    //       //                                 ),
+    //       //                                 // textAlign: TextAlign.center,
+    //       //                               ),
+    //       //                             ],
+    //       //                           ),
+    //       //                         )
+    //       //                     ),
+    //       //                     Container(
+    //       //                       padding: EdgeInsets.symmetric(
+    //       //                           horizontal: 5, vertical: 5),
+    //       //                       child: Align(
+    //       //                         alignment: Alignment.bottomLeft,
+    //       //
+    //       //                         child: Container(
+    //       //                           height: 45,
+    //       //                           width: 45,
+    //       //                           decoration: BoxDecoration(
+    //       //                             boxShadow: <BoxShadow>[
+    //       //                               BoxShadow(
+    //       //                                   color: Colors.black54,
+    //       //                                   offset: Offset(0, 0),
+    //       //                                   blurRadius: 4,
+    //       //                                   spreadRadius: 1)
+    //       //                             ],
+    //       //                             borderRadius: BorderRadius
+    //       //                                 .all(Radius
+    //       //                                 .circular(12)),
+    //       //                             color: Colors.white,
+    //       //                           ),
+    //       //
+    //       //                           child: Stack(
+    //       //                             children: <Widget>[
+    //       //                               Align(
+    //       //                                 alignment: Alignment
+    //       //                                     .center,
+    //       //                                 child: IconButton(
+    //       //                                   iconSize: 30,
+    //       //                                   onPressed: () {
+    //       //                                     if (isfav) {
+    //       //                                       bool vote = false;
+    //       //                                       setState(() {
+    //       //                                         isfav = false;
+    //       //                                         FirebaseFirestore
+    //       //                                             .instance
+    //       //                                             .collection(
+    //       //                                             'usuario')
+    //       //                                             .doc(
+    //       //                                             user)
+    //       //                                             .collection(
+    //       //                                             'ofertas')
+    //       //                                             .doc(ofer[i]["id"])
+    //       //                                             .delete();
+    //       //                                         BusinessDatabaseConnect()
+    //       //                                             .likeOferta(
+    //       //                                             ofer[i]["pageid"],
+    //       //                                             ofer[i]["id"],
+    //       //                                             vote);
+    //       //                                       });
+    //       //                                     } else {
+    //       //                                       bool vote = true;
+    //       //                                       setState(() {
+    //       //                                         isfav = true;
+    //       //                                         DatabaseConnect(
+    //       //                                             uid: user)
+    //       //                                             .likeOferta(
+    //       //                                             ofer[i]["id"],isfav,true,false,ofer[i]["limiteUsuario"],ofer[i]["urlImage"],ofer[i]["nombre"],ofer[i]["valor"]+0.0,ofer[i]["pageid"]);
+    //       //                                         BusinessDatabaseConnect()
+    //       //                                             .likeOferta(
+    //       //                                             ofer[i]["pageid"],
+    //       //                                             ofer[i]["id"],
+    //       //                                             vote);
+    //       //                                         ScaffoldMessenger
+    //       //                                             .of(context)
+    //       //                                             .showSnackBar(
+    //       //                                             SnackBar(
+    //       //                                                 content: Text(
+    //       //                                                     'Te gusta ${ofer[i]["nombre"]}')));
+    //       //                                       });
+    //       //                                     }
+    //       //                                   },
+    //       //                                   icon: Icon(isfav
+    //       //                                       ? Icons.favorite
+    //       //                                       : Icons
+    //       //                                       .favorite_border),
+    //       //                                   color: Color(
+    //       //                                       0xff2C73D2),
+    //       //                                 ),
+    //       //                               ),
+    //       //                             ],
+    //       //                           ),
+    //       //                         ),
+    //       //
+    //       //                       ),
+    //       //                     ),
+    //       //                   ],
+    //       //                 ),
+    //       //               ),
+    //       //
+    //       //             ),
+    //       //             back: Card(
+    //       //               shape: RoundedRectangleBorder(
+    //       //                 borderRadius: BorderRadius
+    //       //                     .all(Radius
+    //       //                     .circular(5)),
+    //       //               ),
+    //       //               child: Container(
+    //       //                 width: MediaQuery
+    //       //                     .of(context)
+    //       //                     .size
+    //       //                     .width,
+    //       //                 // height: 50,
+    //       //                 padding: EdgeInsets
+    //       //                     .symmetric(
+    //       //                     vertical: 20),
+    //       //                 alignment: Alignment
+    //       //                     .center,
+    //       //                 //
+    //       //                 child: Stack(
+    //       //                   children: <Widget>[
+    //       //                     Container(
+    //       //                       // height: ,
+    //       //                       width: MediaQuery
+    //       //                           .of(context)
+    //       //                           .size
+    //       //                           .width,
+    //       //                       // color: Colors.amber,
+    //       //                       child: Row(
+    //       //                         crossAxisAlignment: CrossAxisAlignment
+    //       //                             .center,
+    //       //                         // mainAxisAlignment: MainAxisAlignment.center,
+    //       //
+    //       //                         children: <Widget>[
+    //       //                           Container(
+    //       //                               width: 150,
+    //       //                               // height: 200,
+    //       //                               child: InkWell(
+    //       //                                 onTap: (){
+    //       //                                   showDialog(
+    //       //                                       barrierDismissible: true,
+    //       //                                       context: context,
+    //       //                                       builder: (context) {
+    //       //                                         return AlertDialog(
+    //       //                                           elevation: 24,
+    //       //                                           title: Text(
+    //       //                                               "¿Quieres usar la oferta?"
+    //       //                                           ),
+    //       //                                           content: Row(
+    //       //                                             children: <Widget>[
+    //       //                                               Container(
+    //       //                                                 width: 130,
+    //       //                                                 height: 130,
+    //       //                                                 child: QrImage(
+    //       //                                                   data: ofer[i]["id"],
+    //       //                                                   size: MediaQuery
+    //       //                                                       .of(context)
+    //       //                                                       .size
+    //       //                                                       .height,
+    //       //                                                 ),
+    //       //                                               ),
+    //       //                                               SizedBox(
+    //       //
+    //       //                                                 height: 120,
+    //       //                                                 child: Column(
+    //       //                                                     mainAxisAlignment: MainAxisAlignment
+    //       //                                                         .center,
+    //       //                                                     crossAxisAlignment: CrossAxisAlignment
+    //       //                                                         .start,
+    //       //                                                     children: <Widget>[
+    //       //                                                       SizedBox(
+    //       //                                                         height: 40,
+    //       //                                                         // width: 200,
+    //       //                                                         child: Text(
+    //       //                                                           ofer[i]["nombre"],
+    //       //                                                           style: TextStyle(
+    //       //                                                               fontSize: 15,
+    //       //                                                               color: Colors
+    //       //                                                                   .black54),
+    //       //                                                         ),
+    //       //                                                       ),
+    //       //                                                       SizedBox(
+    //       //                                                         height: 40,
+    //       //                                                         // width: 200,
+    //       //                                                         child: Text(
+    //       //                                                           "GTQ ${ofer[i]["valor"]}",
+    //       //                                                           style: TextStyle(
+    //       //                                                               fontSize: 15,
+    //       //                                                               color: Colors
+    //       //                                                                   .black54),
+    //       //                                                         ),
+    //       //                                                       ),
+    //       //
+    //       //                                                     ]
+    //       //                                                 ),
+    //       //                                               ),
+    //       //
+    //       //                                             ],
+    //       //                                           ),
+    //       //                                           actions: [
+    //       //                                             TextButton(
+    //       //                                               onPressed: () {
+    //       //                                                 Navigator.pop(
+    //       //                                                     context);
+    //       //                                               },
+    //       //                                               child: Text("No"),
+    //       //                                             ),
+    //       //                                             TextButton(
+    //       //                                               onPressed: () {
+    //       //                                                 bool vote = true;
+    //       //                                                 DatabaseConnect(
+    //       //                                                     uid: user)
+    //       //                                                     .likeOferta(
+    //       //                                                     ofer[i]["id"],isfav,true,true,ofer[i]["limiteUsuario"],ofer[i]["urlImage"],ofer[i]["nombre"],ofer[i]["valor"],ofer[i]["pageid"]);
+    //       //                                                 BusinessDatabaseConnect()
+    //       //                                                     .useOferta(
+    //       //                                                     ofer[i]["pageid"],
+    //       //                                                     ofer[i]["id"],
+    //       //                                                     vote);
+    //       //                                                 Navigator.pop(
+    //       //                                                     context);
+    //       //                                               },
+    //       //                                               child: Text("Si"),
+    //       //                                             ),
+    //       //
+    //       //                                           ],
+    //       //                                         );
+    //       //                                       }
+    //       //                                   );
+    //       //                                 },
+    //       //                                 child: QrImage(
+    //       //                                   data: ofer[i]["id"],
+    //       //                                   size: MediaQuery
+    //       //                                       .of(context)
+    //       //                                       .size
+    //       //                                       .height,
+    //       //                                 ),
+    //       //                               )
+    //       //                             // child:
+    //       //                           ),
+    //       //                           // SizedBox(
+    //       //                           //   width: 30,
+    //       //                           // ),
+    //       //                           Column(
+    //       //                               mainAxisAlignment: MainAxisAlignment
+    //       //                                   .start,
+    //       //                               crossAxisAlignment: CrossAxisAlignment
+    //       //                                   .end,
+    //       //                               children: <Widget>[
+    //       //                                 SizedBox(
+    //       //                                   height: 40,
+    //       //                                   width: 200,
+    //       //                                   child: Card(
+    //       //                                     color: Color(0xff87b3ed),
+    //       //                                     elevation: 10,
+    //       //                                     child: Text(
+    //       //                                       ofer[i]["nombre"],
+    //       //                                       textAlign: TextAlign.center,
+    //       //                                       style: TextStyle(
+    //       //                                           fontSize: 20,
+    //       //                                           color: Colors
+    //       //                                               .black54),
+    //       //                                     ),
+    //       //                                   ),
+    //       //                                 ),
+    //       //
+    //       //
+    //       //                                 SizedBox(
+    //       //                                   height: 20,
+    //       //                                 ),
+    //       //                                 SizedBox(
+    //       //                                   height: 40,
+    //       //                                   width: 200,
+    //       //                                   child: Card(
+    //       //                                     color: Color(0xff87b3ed),
+    //       //                                     elevation: 10,
+    //       //                                     child: Text(
+    //       //                                       "GTQ ${ofer[i]["valor"]}",
+    //       //                                       textAlign: TextAlign.center,
+    //       //                                       style: TextStyle(
+    //       //                                           fontSize: 20,
+    //       //                                           color: Colors
+    //       //                                               .black54),
+    //       //                                     ),
+    //       //                                   ),
+    //       //                                 ),
+    //       //
+    //       //
+    //       //
+    //       //                               ]
+    //       //                           ),
+    //       //
+    //       //                         ],
+    //       //                       ),
+    //       //                     ),
+    //       //                   ],
+    //       //
+    //       //                 ),
+    //       //               ),
+    //       //
+    //       //             ),
+    //       //           ),
+    //       //
+    //       //
+    //       //         );
+    //       //       }
+    //       //   ),
+    //       //   // child:
+    //       // );
+    //     },
+    //   );
+    // }
+
+    // ofer.removeAt(3);
+    print(ofer.length);
 
     return SizedBox(
       height: 200,
@@ -1813,24 +2365,24 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
             bool isfav = false;
             if(snapoferta.size == 0){
 
-                isfav = false;
-                changeIconFav();
+              isfav = false;
+              changeIconFav();
 
             }
             else{
               for (int j = 0; j < snapoferta.size; j++) {
                 if(ofer.length==0){
-                    isfav = false;
-                    changeIconFav();
+                  isfav = false;
+                  changeIconFav();
 
                 }else{
-                  if (snapoferta.docs[j]["ofertaID"] == ofer[i]["id"]) {
+                  if (snapoferta.docs[j]["ofertaID"] == ofer[i].id) {
                     isfav = true;
                     changeIconFav();
                   }
                 }
 
-            }
+              }
 
             }
             return Padding(
@@ -1854,7 +2406,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                     // height: 50,
                     padding: EdgeInsets
                         .symmetric(
-                        vertical: 20),
+                        vertical: 0),
                     alignment: Alignment
                         .center,
                     decoration: BoxDecoration(
@@ -1870,78 +2422,59 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                       //       spreadRadius: 2)
                       // ],
                       // border: Border.all(color: Colors.grey, width: 2),
-                      image: imagePick(ofer[i]["urlImage"]),
+                      image: imagePick(ofer[i].urlImage),
 
 
                     ),
-                    //     child: Stack(
-                    //       children: <Widget>[
-                    //         Container(
-                    //           // height: ,
-                    //           width: MediaQuery.of(context).size.width,
-                    //           // color: Colors.amber,
-                    //           child: Row(
-                    //             crossAxisAlignment: CrossAxisAlignment.center,
-                    //             // mainAxisAlignment: MainAxisAlignment.center,
-                    //
-                    //             children: <Widget>[
-                    //               Container(
-                    //                 width: 200,
-                    //                 // height: 100,
-                    //                 decoration: BoxDecoration(
-                    //                   borderRadius: BorderRadius
-                    //                       .all(Radius
-                    //                       .circular(
-                    //                       5)),
-                    //                   // boxShadow: <BoxShadow>[
-                    //                   //   BoxShadow(
-                    //                   //       color: Colors.black,
-                    //                   //       offset: Offset(0, 4),
-                    //                   //       blurRadius: 10,
-                    //                   //       spreadRadius: 2)
-                    //                   // ],
-                    //                   // border: Border.all(color: Colors.grey, width: 2),
-                    //                   image: DecorationImage(
-                    //                     image: NetworkImage(
-                    //                       oferta.docs[i]["urlImage"],
-                    //                       ),
-                    //                       fit: BoxFit.fill,),
-                    //
-                    //                   ),
-                    //                 ),
-                    //               SizedBox(
-                    //                 width: 30,
-                    //               ),
-                    //               Column(
-                    //                 mainAxisAlignment: MainAxisAlignment.start,
-                    //
-                    //                 children: <Widget>[
-                    //                   Text(
-                    //                     oferta.docs[i]["nombre"],
-                    //                     style: TextStyle(
-                    //                         fontSize: 20,
-                    //                         color: Colors
-                    //                             .white),
-                    //
-                    //
-                    //                     //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
-                    //
-                    //
-                    //                   ),
-                    //                 ]
-                    //               ),
-                    //
-                    //             ],
-                    //           ),
-                    //         ),
-                    //   ],
-                    //
-                    // ),
+
                     child: Stack(
                       children: <Widget>[
                         Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Align(
+                              alignment: Alignment.topRight,
+                              child: Stack(
+                                children: <Widget>[
+                                  // Stroked text as border.
+                                  Text(
+                                    ofer[i].nombre,
+                                    style: GoogleFonts.oswald(
+                                      foreground:  Paint()
+                                        ..style = PaintingStyle.stroke
+                                        ..strokeWidth = 2
+                                        ..color = Colors.black54,
+                                      textStyle: Theme.of(context).textTheme.headline4,
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w400,
+
+                                    ),
+                                    // textAlign: TextAlign.center,
+                                  ),
+                                  // Solid text as fill.
+                                  Text(
+                                    ofer[i].nombre,
+                                    style: GoogleFonts.oswald(
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                          offset: Offset(3.5, 3.5),
+                                          blurRadius: 3.0,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                        ),
+                                      ],
+                                      textStyle: Theme.of(context).textTheme.headline4,
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    // textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                        ),
+                        Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 5),
+                              horizontal: 5, vertical: 5),
                           child: Align(
                             alignment: Alignment.bottomLeft,
 
@@ -1949,6 +2482,13 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                               height: 45,
                               width: 45,
                               decoration: BoxDecoration(
+                                boxShadow: <BoxShadow>[
+                                  BoxShadow(
+                                      color: Colors.black54,
+                                      offset: Offset(0, 0),
+                                      blurRadius: 4,
+                                      spreadRadius: 1)
+                                ],
                                 borderRadius: BorderRadius
                                     .all(Radius
                                     .circular(12)),
@@ -1975,12 +2515,12 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                                                 user)
                                                 .collection(
                                                 'ofertas')
-                                                .doc(ofer[i]["id"])
+                                                .doc(ofer[i].id)
                                                 .delete();
                                             BusinessDatabaseConnect()
                                                 .likeOferta(
-                                                ofer[i]["pageid"],
-                                                ofer[i]["id"],
+                                                ofer[i].pageid,
+                                                ofer[i].id,
                                                 vote);
                                           });
                                         } else {
@@ -1990,18 +2530,18 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
                                             DatabaseConnect(
                                                 uid: user)
                                                 .likeOferta(
-                                                ofer[i]["id"],isfav,true,false,ofer[i]["limiteUsuario"]);
+                                                ofer[i].id,isfav,true,false,ofer[i].limiteUsuario,ofer[i].urlImage,ofer[i].nombre,ofer[i].valor+0.0,ofer[i].pageid);
                                             BusinessDatabaseConnect()
                                                 .likeOferta(
-                                                ofer[i]["pageid"],
-                                                ofer[i]["id"],
+                                                ofer[i].pageid,
+                                                ofer[i].id,
                                                 vote);
                                             ScaffoldMessenger
                                                 .of(context)
                                                 .showSnackBar(
                                                 SnackBar(
                                                     content: Text(
-                                                        'Te gusta ${ofer[i]["nombre"]}')));
+                                                        'Te gusta ${ofer[i].nombre}')));
                                           });
                                         }
                                       },
@@ -2058,137 +2598,160 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
                             children: <Widget>[
                               Container(
-                                width: 200,
-                                // height: 200,
-                                child: InkWell(
-                                  onTap: (){
-                                    showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            elevation: 24,
-                                            title: Text(
-                                                "¿Quieres usar la oferta?"
-                                            ),
-                                            content: Row(
-                                              children: <Widget>[
-                                                Container(
-                                                  width: 130,
-                                                  height: 130,
-                                                  child: QrImage(
-                                                    data: ofer[i]["id"],
-                                                    size: MediaQuery
-                                                        .of(context)
-                                                        .size
-                                                        .height,
+                                  width: 150,
+                                  // height: 200,
+                                  child: InkWell(
+                                    onTap: (){
+                                      showDialog(
+                                          barrierDismissible: true,
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              elevation: 24,
+                                              title: Text(
+                                                  "¿Quieres usar la oferta?"
+                                              ),
+                                              content: Row(
+                                                children: <Widget>[
+                                                  Container(
+                                                    width: 130,
+                                                    height: 130,
+                                                    child: QrImage(
+                                                      data: ofer[i].id,
+                                                      size: MediaQuery
+                                                          .of(context)
+                                                          .size
+                                                          .height,
+                                                    ),
                                                   ),
+                                                  SizedBox(
+
+                                                    height: 120,
+                                                    child: Column(
+                                                        mainAxisAlignment: MainAxisAlignment
+                                                            .center,
+                                                        crossAxisAlignment: CrossAxisAlignment
+                                                            .start,
+                                                        children: <Widget>[
+                                                          SizedBox(
+                                                            height: 40,
+                                                            // width: 200,
+                                                            child: Text(
+                                                              ofer[i].nombre,
+                                                              style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  color: Colors
+                                                                      .black54),
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            height: 40,
+                                                            // width: 200,
+                                                            child: Text(
+                                                              "GTQ ${ofer[i].valor}",
+                                                              style: TextStyle(
+                                                                  fontSize: 15,
+                                                                  color: Colors
+                                                                      .black54),
+                                                            ),
+                                                          ),
+
+                                                        ]
+                                                    ),
+                                                  ),
+
+                                                ],
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                        context);
+                                                  },
+                                                  child: Text("No"),
                                                 ),
-                                                SizedBox(
-
-                                                  height: 120,
-                                                  child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment
-                                                          .center,
-                                                      crossAxisAlignment: CrossAxisAlignment
-                                                          .start,
-                                                      children: <Widget>[
-                                                        SizedBox(
-                                                          height: 40,
-                                                          // width: 200,
-                                                          child: Text(
-                                                            ofer[i]["nombre"],
-                                                            style: TextStyle(
-                                                                fontSize: 15,
-                                                                color: Colors
-                                                                    .black54),
-                                                          ),
-                                                        ),
-                                                        SizedBox(
-                                                          height: 40,
-                                                          // width: 200,
-                                                          child: Text(
-                                                            "GTQ ${ofer[i]["valor"]}",
-                                                            style: TextStyle(
-                                                                fontSize: 15,
-                                                                color: Colors
-                                                                    .black54),
-                                                          ),
-                                                        ),
-
-                                                      ]
-                                                  ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    bool vote = true;
+                                                    DatabaseConnect(
+                                                        uid: user)
+                                                        .likeOferta(
+                                                        ofer[i].id,isfav,true,true,ofer[i].limiteUsuario,ofer[i].urlImage,ofer[i].nombre,ofer[i].valor+0.0,ofer[i].pageid);
+                                                    BusinessDatabaseConnect()
+                                                        .useOferta(
+                                                        ofer[i].pageid,
+                                                        ofer[i].id,
+                                                        vote);
+                                                    Navigator.pop(
+                                                        context);
+                                                  },
+                                                  child: Text("Si"),
                                                 ),
 
                                               ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(
-                                                      context);
-                                                },
-                                                child: Text("No"),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  bool vote = true;
-                                                  DatabaseConnect(
-                                                      uid: user)
-                                                      .likeOferta(
-                                                      ofer[i]["id"],isfav,true,true,ofer[i]["limiteUsuario"]);
-                                                  BusinessDatabaseConnect()
-                                                      .useOferta(
-                                                      ofer[i]["pageid"],
-                                                      ofer[i]["id"],
-                                                      vote);
-                                                  Navigator.pop(
-                                                      context);
-                                                },
-                                                child: Text("Si"),
-                                              ),
-
-                                            ],
-                                          );
-                                        }
-                                    );
-                                  },
-                                  child: QrImage(
-                                    data: ofer[i]["id"],
-                                    size: MediaQuery
-                                        .of(context)
-                                        .size
-                                        .height,
-                                  ),
-                                )
+                                            );
+                                          }
+                                      );
+                                    },
+                                    child: QrImage(
+                                      data: ofer[i].id,
+                                      size: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .height,
+                                    ),
+                                  )
                                 // child:
                               ),
-                              SizedBox(
-                                width: 30,
-                              ),
+                              // SizedBox(
+                              //   width: 30,
+                              // ),
                               Column(
                                   mainAxisAlignment: MainAxisAlignment
                                       .start,
                                   crossAxisAlignment: CrossAxisAlignment
                                       .end,
                                   children: <Widget>[
-                                    Text(
-                                      ofer[i]["nombre"],
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors
-                                              .black54),
+                                    SizedBox(
+                                      height: 40,
+                                      width: 200,
+                                      child: Card(
+                                        color: Color(0xff87b3ed),
+                                        elevation: 10,
+                                        child: Text(
+                                          ofer[i].nombre,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              color: Colors
+                                                  .black54),
+                                        ),
+                                      ),
                                     ),
+
+
                                     SizedBox(
                                       height: 20,
                                     ),
-                                    Text(
-                                      "GTQ ${ofer[i]["valor"]}",
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors
-                                              .black54),
+                                    SizedBox(
+                                      height: 40,
+                                      width: 200,
+                                      child: Card(
+                                        color: Color(0xff87b3ed),
+                                        elevation: 10,
+                                        child: Text(
+                                          "GTQ ${ofer[i].valor}",
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              color: Colors
+                                                  .black54),
+                                        ),
+                                      ),
                                     ),
+
+
+
                                   ]
                               ),
 
@@ -2209,6 +2772,8 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
       ),
       // child:
     );
+
+
   }
 
   DecorationImage imagePick(String img){
@@ -2240,11 +2805,14 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-    fetchOfertas();
+    // if(ofertaData.isEmpty){
+      fetchOfertas();
+    // }
     fetchGustos();
     final user = Provider.of<Usuario>(context);
     int idx = 0;
 
+    // print(finalList);
     FirestoreStart().connectFS2();
 
     getToken(user.uid);
@@ -2315,402 +2883,872 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
               stream: FirebaseFirestore.instance.collection('usuario').doc(
                   user.uid).collection("ofertas").snapshots(),
 
-              builder: (context, snapoferta) {
+              builder: (context, snapofer) {
 
-                var oferta = snapoferta.data;
-                // print(ofer.length);
+                return StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection('ofertas').snapshots(),
+                  builder: (context, busoferta){
+                    var snapoferta = snapofer.data;
 
-                return PageView(
-                  children: <Widget>[
-                    Stack(
-                fit: StackFit.expand,
-                  children: <Widget>[
-                    background(),
+                    // var oferta = snapoferta.data;
 
+                    var ofer = ofertaData;
+                    // print(ofertaData.length);
+                    // var ofertas = finalOfertasList.toSet().toList();
+                    int idx = 0;
 
-                    Column(
+                    // rebuild();
+                    var listFinal =[];
+                    var busofertas = [];
+                    busofertas = busoferta.data.docs.map((e) => e.id).toList();
 
-                      // shrinkWrap: true,
-                      children: <Widget>[
+                    for(int k = 0;k<ofer.length;k++){
+                      if(ofer[k]["estado"]=="activo"){
+                        for(int m=0;m<snapoferta.size;m++){
 
-                        FutureBuilder<Widget>(
-                          future: showOfertas(context, oferta, user.uid),
-                          builder: (context,AsyncSnapshot<Widget> snapshot){
+                          if(snapoferta.docs[m]["ofertaID"]==ofer[k]["id"]){
 
-                            if(snapshot.hasData)
-                              return snapshot.data;
+                            if((snapoferta.docs[m]["limite"]==0)||(snapoferta.docs[m]["estado"]==false)){
+                              // print("USUARIO ${snapoferta.docs[m]["ofertaID"]}");
+                              // print("OFERTAS ${ofer[k]["id"]}");
+                              // DatabaseConnect(
+                              //     uid: user)
+                              //     .likeOferta(
+                              //     snapoferta.docs[m]["ofertaID"],true,true,false,snapoferta.docs[m]["limite"]);
+                              ofer.removeAt(k);
+                              // ofertaData.removeAt(k);
 
-                            return Container(child: CircularProgressIndicator(),);
-                          },
-
-
-                        ),
-                        // showOfertas(context,oferta,user.uid),
-                        // SizedBox(
-                        //   height: 180,
-                        //   child: PageView.builder(
-                        //       itemCount: ofer.length,
-                        //       controller: PageController(/*viewportFraction: 0.9*/),
-                        //       onPageChanged: (int index) =>
-                        //           setState(() =>
-                        //           idx = index),
-                        //       itemBuilder: (_, i) {
-                        //         for (int j = 0; j < snapoferta.data.size; j++) {
-                        //           if (snapoferta.data.docs[j]["ofertaID"] == ofer[i]["id"]) {
-                        //             isfav = true;
-                        //             changeIconFav();
-                        //           }
-                        //         }
-                        //         return Padding(
-                        //           padding: EdgeInsets
-                        //               .symmetric(
-                        //               horizontal: 7),
-                        //
-                        //           child: FlipCard(
-                        //             direction: FlipDirection.VERTICAL,
-                        //             front: Card(
-                        //               shape: RoundedRectangleBorder(
-                        //                 borderRadius: BorderRadius
-                        //                     .all(Radius
-                        //                     .circular(5)),
-                        //               ),
-                        //               child: Container(
-                        //                 width: MediaQuery
-                        //                     .of(context)
-                        //                     .size
-                        //                     .width,
-                        //                 // height: 50,
-                        //                 padding: EdgeInsets
-                        //                     .symmetric(
-                        //                     vertical: 20),
-                        //                 alignment: Alignment
-                        //                     .center,
-                        //                 decoration: BoxDecoration(
-                        //                   borderRadius: BorderRadius
-                        //                       .all(Radius
-                        //                       .circular(
-                        //                       5)),
-                        //                   // boxShadow: <BoxShadow>[
-                        //                   //   BoxShadow(
-                        //                   //       color: Colors.black,
-                        //                   //       offset: Offset(0, 4),
-                        //                   //       blurRadius: 10,
-                        //                   //       spreadRadius: 2)
-                        //                   // ],
-                        //                   // border: Border.all(color: Colors.grey, width: 2),
-                        //                   image: DecorationImage(
-                        //                     image: NetworkImage(
-                        //                       ofer[i]["urlImage"],
-                        //                     ),
-                        //                     fit: BoxFit.cover,),
-                        //
-                        //                 ),
-                        //                 //     child: Stack(
-                        //                 //       children: <Widget>[
-                        //                 //         Container(
-                        //                 //           // height: ,
-                        //                 //           width: MediaQuery.of(context).size.width,
-                        //                 //           // color: Colors.amber,
-                        //                 //           child: Row(
-                        //                 //             crossAxisAlignment: CrossAxisAlignment.center,
-                        //                 //             // mainAxisAlignment: MainAxisAlignment.center,
-                        //                 //
-                        //                 //             children: <Widget>[
-                        //                 //               Container(
-                        //                 //                 width: 200,
-                        //                 //                 // height: 100,
-                        //                 //                 decoration: BoxDecoration(
-                        //                 //                   borderRadius: BorderRadius
-                        //                 //                       .all(Radius
-                        //                 //                       .circular(
-                        //                 //                       5)),
-                        //                 //                   // boxShadow: <BoxShadow>[
-                        //                 //                   //   BoxShadow(
-                        //                 //                   //       color: Colors.black,
-                        //                 //                   //       offset: Offset(0, 4),
-                        //                 //                   //       blurRadius: 10,
-                        //                 //                   //       spreadRadius: 2)
-                        //                 //                   // ],
-                        //                 //                   // border: Border.all(color: Colors.grey, width: 2),
-                        //                 //                   image: DecorationImage(
-                        //                 //                     image: NetworkImage(
-                        //                 //                       oferta.docs[i]["urlImage"],
-                        //                 //                       ),
-                        //                 //                       fit: BoxFit.fill,),
-                        //                 //
-                        //                 //                   ),
-                        //                 //                 ),
-                        //                 //               SizedBox(
-                        //                 //                 width: 30,
-                        //                 //               ),
-                        //                 //               Column(
-                        //                 //                 mainAxisAlignment: MainAxisAlignment.start,
-                        //                 //
-                        //                 //                 children: <Widget>[
-                        //                 //                   Text(
-                        //                 //                     oferta.docs[i]["nombre"],
-                        //                 //                     style: TextStyle(
-                        //                 //                         fontSize: 20,
-                        //                 //                         color: Colors
-                        //                 //                             .white),
-                        //                 //
-                        //                 //
-                        //                 //                     //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
-                        //                 //
-                        //                 //
-                        //                 //                   ),
-                        //                 //                 ]
-                        //                 //               ),
-                        //                 //
-                        //                 //             ],
-                        //                 //           ),
-                        //                 //         ),
-                        //                 //   ],
-                        //                 //
-                        //                 // ),
-                        //                 child: Stack(
-                        //                   children: <Widget>[
-                        //                     Container(
-                        //                       padding: EdgeInsets.symmetric(
-                        //                           horizontal: 5),
-                        //                       child: Align(
-                        //                         alignment: Alignment.bottomLeft,
-                        //
-                        //                         child: Container(
-                        //                           height: 45,
-                        //                           width: 45,
-                        //                           decoration: BoxDecoration(
-                        //                             borderRadius: BorderRadius
-                        //                                 .all(Radius
-                        //                                 .circular(12)),
-                        //                             color: Colors.white,
-                        //                           ),
-                        //
-                        //                           child: Stack(
-                        //                             children: <Widget>[
-                        //                               Align(
-                        //                                 alignment: Alignment
-                        //                                     .center,
-                        //                                 child: IconButton(
-                        //                                   iconSize: 30,
-                        //                                   onPressed: () {
-                        //                                     if (isfav) {
-                        //                                       bool vote = false;
-                        //                                       setState(() {
-                        //                                         isfav = false;
-                        //                                         FirebaseFirestore
-                        //                                             .instance
-                        //                                             .collection(
-                        //                                             'usuario')
-                        //                                             .doc(
-                        //                                             user.uid)
-                        //                                             .collection(
-                        //                                             'ofertas')
-                        //                                             .doc(ofer[i]["id"])
-                        //                                             .delete();
-                        //                                         BusinessDatabaseConnect()
-                        //                                             .likeOferta(
-                        //                                             ofer[i]["pageid"],
-                        //                                             ofer[i]["id"],
-                        //                                             vote);
-                        //                                       });
-                        //                                     } else {
-                        //                                       bool vote = true;
-                        //                                       setState(() {
-                        //                                         isfav = true;
-                        //                                         DatabaseConnect(
-                        //                                             uid: user
-                        //                                                 .uid)
-                        //                                             .likeOferta(
-                        //                                             ofer[i]["id"]);
-                        //                                         BusinessDatabaseConnect()
-                        //                                             .likeOferta(
-                        //                                             ofer[i]["pageid"],
-                        //                                             ofer[i]["id"],
-                        //                                             vote);
-                        //                                         ScaffoldMessenger
-                        //                                             .of(context)
-                        //                                             .showSnackBar(
-                        //                                             SnackBar(
-                        //                                                 content: Text(
-                        //                                                     'Te gusta ${ofer[i]["nombre"]}')));
-                        //                                       });
-                        //                                     }
-                        //                                   },
-                        //                                   icon: Icon(isfav
-                        //                                       ? Icons.favorite
-                        //                                       : Icons
-                        //                                       .favorite_border),
-                        //                                   color: Color(
-                        //                                       0xff108aa6),
-                        //                                 ),
-                        //                               ),
-                        //                             ],
-                        //                           ),
-                        //                         ),
-                        //
-                        //                       ),
-                        //                     ),
-                        //                   ],
-                        //                 ),
-                        //               ),
-                        //
-                        //             ),
-                        //             back: Card(
-                        //               shape: RoundedRectangleBorder(
-                        //                 borderRadius: BorderRadius
-                        //                     .all(Radius
-                        //                     .circular(5)),
-                        //               ),
-                        //               child: Container(
-                        //                 width: MediaQuery
-                        //                     .of(context)
-                        //                     .size
-                        //                     .width,
-                        //                 // height: 50,
-                        //                 padding: EdgeInsets
-                        //                     .symmetric(
-                        //                     vertical: 20),
-                        //                 alignment: Alignment
-                        //                     .center,
-                        //                 //
-                        //                 child: Stack(
-                        //                   children: <Widget>[
-                        //                     Container(
-                        //                       // height: ,
-                        //                       width: MediaQuery
-                        //                           .of(context)
-                        //                           .size
-                        //                           .width,
-                        //                       // color: Colors.amber,
-                        //                       child: Row(
-                        //                         crossAxisAlignment: CrossAxisAlignment
-                        //                             .center,
-                        //                         // mainAxisAlignment: MainAxisAlignment.center,
-                        //
-                        //                         children: <Widget>[
-                        //                           Container(
-                        //                             width: 200,
-                        //                             // height: 200,
-                        //                             child: QrImage(
-                        //                               data: ofer[i]["id"],
-                        //                               size: MediaQuery
-                        //                                   .of(context)
-                        //                                   .size
-                        //                                   .height,
-                        //                             ),
-                        //                           ),
-                        //                           SizedBox(
-                        //                             width: 30,
-                        //                           ),
-                        //                           Column(
-                        //                               mainAxisAlignment: MainAxisAlignment
-                        //                                   .start,
-                        //                               crossAxisAlignment: CrossAxisAlignment
-                        //                                   .end,
-                        //                               children: <Widget>[
-                        //                                 Text(
-                        //                                   ofer[i]["nombre"],
-                        //                                   style: TextStyle(
-                        //                                       fontSize: 20,
-                        //                                       color: Colors
-                        //                                           .black54),
-                        //                                 ),
-                        //                                 SizedBox(
-                        //                                   height: 20,
-                        //                                 ),
-                        //                                 Text(
-                        //                                   "GTQ ${ofer[i]["valor"]}",
-                        //                                   style: TextStyle(
-                        //                                       fontSize: 20,
-                        //                                       color: Colors
-                        //                                           .black54),
-                        //                                 ),
-                        //                               ]
-                        //                           ),
-                        //
-                        //                         ],
-                        //                       ),
-                        //                     ),
-                        //                   ],
-                        //
-                        //                 ),
-                        //               ),
-                        //
-                        //             ),
-                        //           ),
-                        //
-                        //
-                        //         );
-                        //       }
-                        //   ),
-                        //   // child:
-                        // ),
-
-
-                        SizedBox(
-                          height: 40,
-                          child: TabPageSelector(controller: _controller),
-
-                        ),
-                        StreamBuilder<QuerySnapshot>(
-                            stream: FirebaseFirestore.instanceFor(
-                                app: Firebase.app('businessApp')).collection(
-                                'empresa').snapshots(),
-                            builder: (context, snapshot1) {
-                              if (!snapshot1.hasData)
-                                return LinearProgressIndicator();
-                              return Expanded(child: buildListRec(
-                                  snapshot1.data, snapshot2.data, user.uid));
                             }
+                          }
+
+                        }
+                      }else{
+                        for(int m=0;m<snapoferta.size;m++) {
+                          if (snapoferta.docs[m]["ofertaID"] == ofer[k]["id"]) {
+                            DatabaseConnect(uid: user.uid).likeOferta(snapoferta.docs[m]["ofertaID"],true,false,false,snapoferta.docs[m]["limite"],snapoferta.docs[m]["urlImage"],snapoferta.docs[m]["nombre"],snapoferta.docs[m]["valor"],snapoferta.docs[m]["idEmpresa"]);
+                          }
+                        }
+                        ofer.removeAt(k);
+                        // ofertaData.removeAt(k);
+                      }
+
+
+
+
+                    }
+                    // for(int i=0; i<busofertas.length;i++){
+                    //   FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(
+                    //       busofertas[i]).collection("ofertas").snapshots().listen((event) {
+                    //     var docs = event.docs;
+                    //     for(var Doc in docs){
+                    //       listFinal.add(OfertaList.fromFirestore(Doc));
+                    //     }
+                    //   });
+                    // }
+
+                    // print(listFinal);
+
+
+
+                    return PageView(
+                      children: <Widget>[
+                        Stack(
+                          fit: StackFit.expand,
+                          children: <Widget>[
+                            background(),
+
+
+                            Column(
+
+                              // shrinkWrap: true,
+                              children: <Widget>[
+
+                                // SizedBox(
+                                //   height: 200,
+                                //   child: InfinityPageView(
+                                //       itemCount: ofer.length,
+                                //       controller: _pageController,
+                                //       onPageChanged: (int index) {
+                                //
+                                //         setState(() {
+                                //           idx = index;
+                                //           _incrementCounter(index);
+                                //         });
+                                //
+                                //
+                                //       },
+                                //
+                                //       itemBuilder: (_, i) {
+                                //         // print("LENGTH ${ofertaData.length}");// print(i);
+                                //         bool isfav = false;
+                                //         if(snapoferta.size == 0){
+                                //
+                                //           isfav = false;
+                                //           changeIconFav();
+                                //
+                                //         }
+                                //         else{
+                                //           for (int j = 0; j < snapoferta.size; j++) {
+                                //             if(ofer.length==0){
+                                //               isfav = false;
+                                //               changeIconFav();
+                                //
+                                //             }else{
+                                //               if (snapoferta.docs[j]["ofertaID"] == ofer[i]["id"]) {
+                                //                 isfav = true;
+                                //                 changeIconFav();
+                                //               }
+                                //             }
+                                //
+                                //           }
+                                //
+                                //         }
+                                //         return Padding(
+                                //           padding: EdgeInsets
+                                //               .symmetric(
+                                //               horizontal: 7),
+                                //
+                                //           child: FlipCard(
+                                //             direction: FlipDirection.VERTICAL,
+                                //             front: Card(
+                                //               shape: RoundedRectangleBorder(
+                                //                 borderRadius: BorderRadius
+                                //                     .all(Radius
+                                //                     .circular(5)),
+                                //               ),
+                                //               child: Container(
+                                //                 width: MediaQuery
+                                //                     .of(context)
+                                //                     .size
+                                //                     .width,
+                                //                 // height: 50,
+                                //                 padding: EdgeInsets
+                                //                     .symmetric(
+                                //                     vertical: 0),
+                                //                 alignment: Alignment
+                                //                     .center,
+                                //                 decoration: BoxDecoration(
+                                //                   borderRadius: BorderRadius
+                                //                       .all(Radius
+                                //                       .circular(
+                                //                       5)),
+                                //                   // boxShadow: <BoxShadow>[
+                                //                   //   BoxShadow(
+                                //                   //       color: Colors.black,
+                                //                   //       offset: Offset(0, 4),
+                                //                   //       blurRadius: 10,
+                                //                   //       spreadRadius: 2)
+                                //                   // ],
+                                //                   // border: Border.all(color: Colors.grey, width: 2),
+                                //                   image: imagePick(ofer[i]["urlImage"]),
+                                //
+                                //
+                                //                 ),
+                                //
+                                //                 child: Stack(
+                                //                   children: <Widget>[
+                                //                     Container(
+                                //                         padding: EdgeInsets.symmetric(horizontal: 20),
+                                //                         child: Align(
+                                //                           alignment: Alignment.topRight,
+                                //                           child: Stack(
+                                //                             children: <Widget>[
+                                //                               // Stroked text as border.
+                                //                               Text(
+                                //                                 ofer[i]["nombre"],
+                                //                                 style: GoogleFonts.oswald(
+                                //                                   foreground:  Paint()
+                                //                                     ..style = PaintingStyle.stroke
+                                //                                     ..strokeWidth = 2
+                                //                                     ..color = Colors.black54,
+                                //                                   textStyle: Theme.of(context).textTheme.headline4,
+                                //                                   fontSize: 25,
+                                //                                   fontWeight: FontWeight.w400,
+                                //
+                                //                                 ),
+                                //                                 // textAlign: TextAlign.center,
+                                //                               ),
+                                //                               // Solid text as fill.
+                                //                               Text(
+                                //                                 ofer[i]["nombre"],
+                                //                                 style: GoogleFonts.oswald(
+                                //                                   shadows: <Shadow>[
+                                //                                     Shadow(
+                                //                                       offset: Offset(3.5, 3.5),
+                                //                                       blurRadius: 3.0,
+                                //                                       color: Color.fromARGB(255, 0, 0, 0),
+                                //                                     ),
+                                //                                   ],
+                                //                                   textStyle: Theme.of(context).textTheme.headline4,
+                                //                                   fontSize: 25,
+                                //                                   fontWeight: FontWeight.w400,
+                                //                                   color: Colors.white.withOpacity(0.9),
+                                //                                 ),
+                                //                                 // textAlign: TextAlign.center,
+                                //                               ),
+                                //                             ],
+                                //                           ),
+                                //                         )
+                                //                     ),
+                                //                     Container(
+                                //                       padding: EdgeInsets.symmetric(
+                                //                           horizontal: 5, vertical: 5),
+                                //                       child: Align(
+                                //                         alignment: Alignment.bottomLeft,
+                                //
+                                //                         child: Container(
+                                //                           height: 45,
+                                //                           width: 45,
+                                //                           decoration: BoxDecoration(
+                                //                             boxShadow: <BoxShadow>[
+                                //                               BoxShadow(
+                                //                                   color: Colors.black54,
+                                //                                   offset: Offset(0, 0),
+                                //                                   blurRadius: 4,
+                                //                                   spreadRadius: 1)
+                                //                             ],
+                                //                             borderRadius: BorderRadius
+                                //                                 .all(Radius
+                                //                                 .circular(12)),
+                                //                             color: Colors.white,
+                                //                           ),
+                                //
+                                //                           child: Stack(
+                                //                             children: <Widget>[
+                                //                               Align(
+                                //                                 alignment: Alignment
+                                //                                     .center,
+                                //                                 child: IconButton(
+                                //                                   iconSize: 30,
+                                //                                   onPressed: () {
+                                //                                     if (isfav) {
+                                //                                       bool vote = false;
+                                //                                       setState(() {
+                                //                                         isfav = false;
+                                //                                         FirebaseFirestore
+                                //                                             .instance
+                                //                                             .collection(
+                                //                                             'usuario')
+                                //                                             .doc(
+                                //                                             user.uid)
+                                //                                             .collection(
+                                //                                             'ofertas')
+                                //                                             .doc(ofer[i]["id"])
+                                //                                             .delete();
+                                //                                         BusinessDatabaseConnect()
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["pageid"],
+                                //                                             ofer[i]["id"],
+                                //                                             vote);
+                                //                                       });
+                                //                                     } else {
+                                //                                       bool vote = true;
+                                //                                       setState(() {
+                                //                                         isfav = true;
+                                //                                         DatabaseConnect(
+                                //                                             uid: user.uid)
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["id"],isfav,true,false,ofer[i]["limiteUsuario"],ofer[i]["urlImage"],ofer[i]["nombre"],ofer[i]["valor"]+0.0,ofer[i]["pageid"]);
+                                //                                         BusinessDatabaseConnect()
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["pageid"],
+                                //                                             ofer[i]["id"],
+                                //                                             vote);
+                                //                                         ScaffoldMessenger
+                                //                                             .of(context)
+                                //                                             .showSnackBar(
+                                //                                             SnackBar(
+                                //                                                 content: Text(
+                                //                                                     'Te gusta ${ofer[i]["nombre"]}')));
+                                //                                       });
+                                //                                     }
+                                //                                   },
+                                //                                   icon: Icon(isfav
+                                //                                       ? Icons.favorite
+                                //                                       : Icons
+                                //                                       .favorite_border),
+                                //                                   color: Color(
+                                //                                       0xff2C73D2),
+                                //                                 ),
+                                //                               ),
+                                //                             ],
+                                //                           ),
+                                //                         ),
+                                //
+                                //                       ),
+                                //                     ),
+                                //                   ],
+                                //                 ),
+                                //               ),
+                                //
+                                //             ),
+                                //             back: Card(
+                                //               shape: RoundedRectangleBorder(
+                                //                 borderRadius: BorderRadius
+                                //                     .all(Radius
+                                //                     .circular(5)),
+                                //               ),
+                                //               child: Container(
+                                //                 width: MediaQuery
+                                //                     .of(context)
+                                //                     .size
+                                //                     .width,
+                                //                 // height: 50,
+                                //                 padding: EdgeInsets
+                                //                     .symmetric(
+                                //                     vertical: 20),
+                                //                 alignment: Alignment
+                                //                     .center,
+                                //                 //
+                                //                 child: Stack(
+                                //                   children: <Widget>[
+                                //                     Container(
+                                //                       // height: ,
+                                //                       width: MediaQuery
+                                //                           .of(context)
+                                //                           .size
+                                //                           .width,
+                                //                       // color: Colors.amber,
+                                //                       child: Row(
+                                //                         crossAxisAlignment: CrossAxisAlignment
+                                //                             .center,
+                                //                         // mainAxisAlignment: MainAxisAlignment.center,
+                                //
+                                //                         children: <Widget>[
+                                //                           Container(
+                                //                               width: 150,
+                                //                               // height: 200,
+                                //                               child: InkWell(
+                                //                                 onTap: (){
+                                //                                   showDialog(
+                                //                                       barrierDismissible: true,
+                                //                                       context: context,
+                                //                                       builder: (context) {
+                                //                                         return AlertDialog(
+                                //                                           elevation: 24,
+                                //                                           title: Text(
+                                //                                               "¿Quieres usar la oferta?"
+                                //                                           ),
+                                //                                           content: Row(
+                                //                                             children: <Widget>[
+                                //                                               Container(
+                                //                                                 width: 130,
+                                //                                                 height: 130,
+                                //                                                 child: QrImage(
+                                //                                                   data: ofer[i]["id"],
+                                //                                                   size: MediaQuery
+                                //                                                       .of(context)
+                                //                                                       .size
+                                //                                                       .height,
+                                //                                                 ),
+                                //                                               ),
+                                //                                               SizedBox(
+                                //
+                                //                                                 height: 120,
+                                //                                                 child: Column(
+                                //                                                     mainAxisAlignment: MainAxisAlignment
+                                //                                                         .center,
+                                //                                                     crossAxisAlignment: CrossAxisAlignment
+                                //                                                         .start,
+                                //                                                     children: <Widget>[
+                                //                                                       SizedBox(
+                                //                                                         height: 40,
+                                //                                                         // width: 200,
+                                //                                                         child: Text(
+                                //                                                           ofer[i]["nombre"],
+                                //                                                           style: TextStyle(
+                                //                                                               fontSize: 15,
+                                //                                                               color: Colors
+                                //                                                                   .black54),
+                                //                                                         ),
+                                //                                                       ),
+                                //                                                       SizedBox(
+                                //                                                         height: 40,
+                                //                                                         // width: 200,
+                                //                                                         child: Text(
+                                //                                                           "GTQ ${ofer[i]["valor"]}",
+                                //                                                           style: TextStyle(
+                                //                                                               fontSize: 15,
+                                //                                                               color: Colors
+                                //                                                                   .black54),
+                                //                                                         ),
+                                //                                                       ),
+                                //
+                                //                                                     ]
+                                //                                                 ),
+                                //                                               ),
+                                //
+                                //                                             ],
+                                //                                           ),
+                                //                                           actions: [
+                                //                                             TextButton(
+                                //                                               onPressed: () {
+                                //                                                 Navigator.pop(
+                                //                                                     context);
+                                //                                               },
+                                //                                               child: Text("No"),
+                                //                                             ),
+                                //                                             TextButton(
+                                //                                               onPressed: () {
+                                //                                                 bool vote = true;
+                                //                                                 DatabaseConnect(
+                                //                                                     uid: user.uid)
+                                //                                                     .likeOferta(
+                                //                                                     ofer[i]["id"],isfav,true,true,ofer[i]["limiteUsuario"],ofer[i]["urlImage"],ofer[i]["nombre"],ofer[i]["valor"],ofer[i]["pageid"]);
+                                //                                                 BusinessDatabaseConnect()
+                                //                                                     .useOferta(
+                                //                                                     ofer[i]["pageid"],
+                                //                                                     ofer[i]["id"],
+                                //                                                     vote);
+                                //                                                 Navigator.pop(
+                                //                                                     context);
+                                //                                               },
+                                //                                               child: Text("Si"),
+                                //                                             ),
+                                //
+                                //                                           ],
+                                //                                         );
+                                //                                       }
+                                //                                   );
+                                //                                 },
+                                //                                 child: QrImage(
+                                //                                   data: ofer[i]["id"],
+                                //                                   size: MediaQuery
+                                //                                       .of(context)
+                                //                                       .size
+                                //                                       .height,
+                                //                                 ),
+                                //                               )
+                                //                             // child:
+                                //                           ),
+                                //                           // SizedBox(
+                                //                           //   width: 30,
+                                //                           // ),
+                                //                           Column(
+                                //                               mainAxisAlignment: MainAxisAlignment
+                                //                                   .start,
+                                //                               crossAxisAlignment: CrossAxisAlignment
+                                //                                   .end,
+                                //                               children: <Widget>[
+                                //                                 SizedBox(
+                                //                                   height: 40,
+                                //                                   width: 200,
+                                //                                   child: Card(
+                                //                                     color: Color(0xff87b3ed),
+                                //                                     elevation: 10,
+                                //                                     child: Text(
+                                //                                       ofer[i]["nombre"],
+                                //                                       textAlign: TextAlign.center,
+                                //                                       style: TextStyle(
+                                //                                           fontSize: 20,
+                                //                                           color: Colors
+                                //                                               .black54),
+                                //                                     ),
+                                //                                   ),
+                                //                                 ),
+                                //
+                                //
+                                //                                 SizedBox(
+                                //                                   height: 20,
+                                //                                 ),
+                                //                                 SizedBox(
+                                //                                   height: 40,
+                                //                                   width: 200,
+                                //                                   child: Card(
+                                //                                     color: Color(0xff87b3ed),
+                                //                                     elevation: 10,
+                                //                                     child: Text(
+                                //                                       "GTQ ${ofer[i]["valor"]}",
+                                //                                       textAlign: TextAlign.center,
+                                //                                       style: TextStyle(
+                                //                                           fontSize: 20,
+                                //                                           color: Colors
+                                //                                               .black54),
+                                //                                     ),
+                                //                                   ),
+                                //                                 ),
+                                //
+                                //
+                                //
+                                //                               ]
+                                //                           ),
+                                //
+                                //                         ],
+                                //                       ),
+                                //                     ),
+                                //                   ],
+                                //
+                                //                 ),
+                                //               ),
+                                //
+                                //             ),
+                                //           ),
+                                //
+                                //
+                                //         );
+                                //       }
+                                //   ),
+                                //   // child:
+                                // ),
+
+                                FutureBuilder<Widget>(
+                                  future: showOfertas(context, snapofer.data, user.uid, busoferta.data),
+                                  builder: (context,AsyncSnapshot<Widget> snapshot){
+
+                                    if(snapshot.hasData)
+                                      return snapshot.data;
+
+                                    return Container(child: CircularProgressIndicator(),);
+                                  },
+
+
+                                ),
+                                // showOfertas(context,oferta,user.uid),
+                                // SizedBox(
+                                //   height: 180,
+                                //   child: PageView.builder(
+                                //       itemCount: ofer.length,
+                                //       controller: PageController(/*viewportFraction: 0.9*/),
+                                //       onPageChanged: (int index) =>
+                                //           setState(() =>
+                                //           idx = index),
+                                //       itemBuilder: (_, i) {
+                                //         for (int j = 0; j < snapoferta.data.size; j++) {
+                                //           if (snapoferta.data.docs[j]["ofertaID"] == ofer[i]["id"]) {
+                                //             isfav = true;
+                                //             changeIconFav();
+                                //           }
+                                //         }
+                                //         return Padding(
+                                //           padding: EdgeInsets
+                                //               .symmetric(
+                                //               horizontal: 7),
+                                //
+                                //           child: FlipCard(
+                                //             direction: FlipDirection.VERTICAL,
+                                //             front: Card(
+                                //               shape: RoundedRectangleBorder(
+                                //                 borderRadius: BorderRadius
+                                //                     .all(Radius
+                                //                     .circular(5)),
+                                //               ),
+                                //               child: Container(
+                                //                 width: MediaQuery
+                                //                     .of(context)
+                                //                     .size
+                                //                     .width,
+                                //                 // height: 50,
+                                //                 padding: EdgeInsets
+                                //                     .symmetric(
+                                //                     vertical: 20),
+                                //                 alignment: Alignment
+                                //                     .center,
+                                //                 decoration: BoxDecoration(
+                                //                   borderRadius: BorderRadius
+                                //                       .all(Radius
+                                //                       .circular(
+                                //                       5)),
+                                //                   // boxShadow: <BoxShadow>[
+                                //                   //   BoxShadow(
+                                //                   //       color: Colors.black,
+                                //                   //       offset: Offset(0, 4),
+                                //                   //       blurRadius: 10,
+                                //                   //       spreadRadius: 2)
+                                //                   // ],
+                                //                   // border: Border.all(color: Colors.grey, width: 2),
+                                //                   image: DecorationImage(
+                                //                     image: NetworkImage(
+                                //                       ofer[i]["urlImage"],
+                                //                     ),
+                                //                     fit: BoxFit.cover,),
+                                //
+                                //                 ),
+                                //                 //     child: Stack(
+                                //                 //       children: <Widget>[
+                                //                 //         Container(
+                                //                 //           // height: ,
+                                //                 //           width: MediaQuery.of(context).size.width,
+                                //                 //           // color: Colors.amber,
+                                //                 //           child: Row(
+                                //                 //             crossAxisAlignment: CrossAxisAlignment.center,
+                                //                 //             // mainAxisAlignment: MainAxisAlignment.center,
+                                //                 //
+                                //                 //             children: <Widget>[
+                                //                 //               Container(
+                                //                 //                 width: 200,
+                                //                 //                 // height: 100,
+                                //                 //                 decoration: BoxDecoration(
+                                //                 //                   borderRadius: BorderRadius
+                                //                 //                       .all(Radius
+                                //                 //                       .circular(
+                                //                 //                       5)),
+                                //                 //                   // boxShadow: <BoxShadow>[
+                                //                 //                   //   BoxShadow(
+                                //                 //                   //       color: Colors.black,
+                                //                 //                   //       offset: Offset(0, 4),
+                                //                 //                   //       blurRadius: 10,
+                                //                 //                   //       spreadRadius: 2)
+                                //                 //                   // ],
+                                //                 //                   // border: Border.all(color: Colors.grey, width: 2),
+                                //                 //                   image: DecorationImage(
+                                //                 //                     image: NetworkImage(
+                                //                 //                       oferta.docs[i]["urlImage"],
+                                //                 //                       ),
+                                //                 //                       fit: BoxFit.fill,),
+                                //                 //
+                                //                 //                   ),
+                                //                 //                 ),
+                                //                 //               SizedBox(
+                                //                 //                 width: 30,
+                                //                 //               ),
+                                //                 //               Column(
+                                //                 //                 mainAxisAlignment: MainAxisAlignment.start,
+                                //                 //
+                                //                 //                 children: <Widget>[
+                                //                 //                   Text(
+                                //                 //                     oferta.docs[i]["nombre"],
+                                //                 //                     style: TextStyle(
+                                //                 //                         fontSize: 20,
+                                //                 //                         color: Colors
+                                //                 //                             .white),
+                                //                 //
+                                //                 //
+                                //                 //                     //AGREGAR SECCION DE RECOMENDACION GUSTOS, FILTRADO POR TAGS DE GUSTOS AGREGADOS
+                                //                 //
+                                //                 //
+                                //                 //                   ),
+                                //                 //                 ]
+                                //                 //               ),
+                                //                 //
+                                //                 //             ],
+                                //                 //           ),
+                                //                 //         ),
+                                //                 //   ],
+                                //                 //
+                                //                 // ),
+                                //                 child: Stack(
+                                //                   children: <Widget>[
+                                //                     Container(
+                                //                       padding: EdgeInsets.symmetric(
+                                //                           horizontal: 5),
+                                //                       child: Align(
+                                //                         alignment: Alignment.bottomLeft,
+                                //
+                                //                         child: Container(
+                                //                           height: 45,
+                                //                           width: 45,
+                                //                           decoration: BoxDecoration(
+                                //                             borderRadius: BorderRadius
+                                //                                 .all(Radius
+                                //                                 .circular(12)),
+                                //                             color: Colors.white,
+                                //                           ),
+                                //
+                                //                           child: Stack(
+                                //                             children: <Widget>[
+                                //                               Align(
+                                //                                 alignment: Alignment
+                                //                                     .center,
+                                //                                 child: IconButton(
+                                //                                   iconSize: 30,
+                                //                                   onPressed: () {
+                                //                                     if (isfav) {
+                                //                                       bool vote = false;
+                                //                                       setState(() {
+                                //                                         isfav = false;
+                                //                                         FirebaseFirestore
+                                //                                             .instance
+                                //                                             .collection(
+                                //                                             'usuario')
+                                //                                             .doc(
+                                //                                             user.uid)
+                                //                                             .collection(
+                                //                                             'ofertas')
+                                //                                             .doc(ofer[i]["id"])
+                                //                                             .delete();
+                                //                                         BusinessDatabaseConnect()
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["pageid"],
+                                //                                             ofer[i]["id"],
+                                //                                             vote);
+                                //                                       });
+                                //                                     } else {
+                                //                                       bool vote = true;
+                                //                                       setState(() {
+                                //                                         isfav = true;
+                                //                                         DatabaseConnect(
+                                //                                             uid: user
+                                //                                                 .uid)
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["id"]);
+                                //                                         BusinessDatabaseConnect()
+                                //                                             .likeOferta(
+                                //                                             ofer[i]["pageid"],
+                                //                                             ofer[i]["id"],
+                                //                                             vote);
+                                //                                         ScaffoldMessenger
+                                //                                             .of(context)
+                                //                                             .showSnackBar(
+                                //                                             SnackBar(
+                                //                                                 content: Text(
+                                //                                                     'Te gusta ${ofer[i]["nombre"]}')));
+                                //                                       });
+                                //                                     }
+                                //                                   },
+                                //                                   icon: Icon(isfav
+                                //                                       ? Icons.favorite
+                                //                                       : Icons
+                                //                                       .favorite_border),
+                                //                                   color: Color(
+                                //                                       0xff108aa6),
+                                //                                 ),
+                                //                               ),
+                                //                             ],
+                                //                           ),
+                                //                         ),
+                                //
+                                //                       ),
+                                //                     ),
+                                //                   ],
+                                //                 ),
+                                //               ),
+                                //
+                                //             ),
+                                //             back: Card(
+                                //               shape: RoundedRectangleBorder(
+                                //                 borderRadius: BorderRadius
+                                //                     .all(Radius
+                                //                     .circular(5)),
+                                //               ),
+                                //               child: Container(
+                                //                 width: MediaQuery
+                                //                     .of(context)
+                                //                     .size
+                                //                     .width,
+                                //                 // height: 50,
+                                //                 padding: EdgeInsets
+                                //                     .symmetric(
+                                //                     vertical: 20),
+                                //                 alignment: Alignment
+                                //                     .center,
+                                //                 //
+                                //                 child: Stack(
+                                //                   children: <Widget>[
+                                //                     Container(
+                                //                       // height: ,
+                                //                       width: MediaQuery
+                                //                           .of(context)
+                                //                           .size
+                                //                           .width,
+                                //                       // color: Colors.amber,
+                                //                       child: Row(
+                                //                         crossAxisAlignment: CrossAxisAlignment
+                                //                             .center,
+                                //                         // mainAxisAlignment: MainAxisAlignment.center,
+                                //
+                                //                         children: <Widget>[
+                                //                           Container(
+                                //                             width: 200,
+                                //                             // height: 200,
+                                //                             child: QrImage(
+                                //                               data: ofer[i]["id"],
+                                //                               size: MediaQuery
+                                //                                   .of(context)
+                                //                                   .size
+                                //                                   .height,
+                                //                             ),
+                                //                           ),
+                                //                           SizedBox(
+                                //                             width: 30,
+                                //                           ),
+                                //                           Column(
+                                //                               mainAxisAlignment: MainAxisAlignment
+                                //                                   .start,
+                                //                               crossAxisAlignment: CrossAxisAlignment
+                                //                                   .end,
+                                //                               children: <Widget>[
+                                //                                 Text(
+                                //                                   ofer[i]["nombre"],
+                                //                                   style: TextStyle(
+                                //                                       fontSize: 20,
+                                //                                       color: Colors
+                                //                                           .black54),
+                                //                                 ),
+                                //                                 SizedBox(
+                                //                                   height: 20,
+                                //                                 ),
+                                //                                 Text(
+                                //                                   "GTQ ${ofer[i]["valor"]}",
+                                //                                   style: TextStyle(
+                                //                                       fontSize: 20,
+                                //                                       color: Colors
+                                //                                           .black54),
+                                //                                 ),
+                                //                               ]
+                                //                           ),
+                                //
+                                //                         ],
+                                //                       ),
+                                //                     ),
+                                //                   ],
+                                //
+                                //                 ),
+                                //               ),
+                                //
+                                //             ),
+                                //           ),
+                                //
+                                //
+                                //         );
+                                //       }
+                                //   ),
+                                //   // child:
+                                // ),
+
+
+                                SizedBox(
+                                  height: 40,
+                                  child: TabPageSelector(controller: _controller),
+
+                                ),
+                                StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instanceFor(
+                                        app: Firebase.app('businessApp')).collection(
+                                        'empresa').snapshots(),
+                                    builder: (context, snapshot1) {
+                                      if (!snapshot1.hasData)
+                                        return LinearProgressIndicator();
+                                      return Expanded(child: buildListRec(
+                                          snapshot1.data, snapshot2.data, user.uid));
+                                    }
+                                ),
+
+
+
+
+                              ],
+                            ),
+                            // ),
+
+
+                            // ),
+
+                          ],
+                          // child: Image.asset("assets/images/background.png"),
+
                         ),
 
-
-
-                        // gustosVerify(context);
-                        // if(!snapshot.hasData) return LinearProgressIndicator();
-                        // return Expanded(child: buildListRec(snapshot.data));
-
-
-                        // new Expanded(
-                        //   child:
-                        //   ListView.builder(
-                        //     shrinkWrap: true,
-                        //     itemCount: empresas.length,
-                        //     physics: ScrollPhysics(),
-                        //     itemBuilder: (BuildContext context, int index){
-                        //
-                        //       return recommendEmpresa(empresas[index], context);
-                        //     },
-                        //     // crossAxisAlignment: CrossAxisAlignment.center,
-                        //     // mainAxisAlignment: MainAxisAlignment.center,
-                        //
-                        //
-                        //   ),
-                        // ),
-                        // ),
-                        // ),
-                        // ),
-
-                        // ),
+                        // buildListGus(user.uid,snapofer.data, snapshot2.data, busoferta.data),
 
                       ],
-                    ),
-                    // ),
 
+                    );
 
-                    // ),
-
-                  ],
-                  // child: Image.asset("assets/images/background.png"),
-
-                ),
-
-                    buildListGus(user.uid,oferta, snapshot2.data),
-
-                  ],
-
+                  },
                 );
+                
+                // print(ofer.length);
+
 
 
               });

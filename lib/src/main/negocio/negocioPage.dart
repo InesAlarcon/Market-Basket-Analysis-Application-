@@ -46,6 +46,7 @@ class NegocioPageState extends State<NegocioPage> {
 
   Set<Marker> markersMap = HashSet<Marker>();
 
+  var ofertaData = [];
   var data;
   var datauser;
 
@@ -106,6 +107,7 @@ class NegocioPageState extends State<NegocioPage> {
   void initState(){
     super.initState();
     pageid = widget.pageid;
+    fetchOfertas();
     // userid = widget.userid;
 
     // print(pageid);
@@ -157,7 +159,28 @@ class NegocioPageState extends State<NegocioPage> {
     );
   }
 
+  fetchOfertas() async {
 
+      FirebaseFirestore.instanceFor(app: Firebase.app('businessApp')).collection("ofertas").doc(pageid).collection("ofertas").snapshots().listen((event) {
+
+        ofertaData = event.docs.map((e) => {
+          "pageid": pageid,
+          "id": e.id,
+          "nombre": e.get("nombre"),
+          "urlImage": e.get("urlImage"),
+          "valor": e.get("valor"),
+          "etiquetas": e.get("etiquetas"),
+          "categorias": e.get("categorias"),
+          "votos": e.get("votos"),
+          "estado": e.get("estado"),
+          "limiteOferta": e.get("limiteOferta"),
+          "limiteUsuario": e.get("limiteUsuario"),
+        }).toList();
+        print(ofertaData);
+        // oferList=ofertaData;
+      });
+
+  }
   
   Widget sucursalList(DocumentSnapshot snapshot){
     var sucursal = snapshot.data();
@@ -577,7 +600,7 @@ class NegocioPageState extends State<NegocioPage> {
 
     DocumentSnapshot snapshotDoc;
     initPage();
-
+    fetchOfertas();
 
     return new Scaffold(
       body: StreamBuilder<DocumentSnapshot>(
@@ -737,7 +760,7 @@ class NegocioPageState extends State<NegocioPage> {
 
                               bytes = img.contentAsBytes();
 
-                              print("ok ct");
+                              // print("ok ct");
                             } else if (!imageb) {
                               imageID = imageID.toString().replaceAll(exp, "");
                             }
@@ -1109,29 +1132,6 @@ class NegocioPageState extends State<NegocioPage> {
 
                                       children: <Widget>[
 
-                                        // Expanded(
-                                        //   flex: 1,
-                                        //   child: PageView(
-                                        //     children: <Widget>[
-                                        //       Stack(
-                                        //           children: <Widget>[
-                                        //
-                                        //           ]
-                                        //       ),
-                                        //       GoogleMap(
-                                        //         markers: markersMap,
-                                        //         onMapCreated: onMapCreated,
-                                        //         initialCameraPosition: CameraPosition(
-                                        //           target: LatLng(
-                                        //               inlat, inlng),
-                                        //           zoom: 12,
-                                        //         ),
-                                        //         myLocationButtonEnabled: false,
-                                        //         zoomControlsEnabled: true,
-                                        //       ),
-                                        //     ],
-                                        //   ),
-                                        // ),
                                         Column(
                                           children: <Widget>[
                                             Container(
@@ -1153,53 +1153,10 @@ class NegocioPageState extends State<NegocioPage> {
                                                   ]
                                               ),
                                             ),
-                                            // Padding(
-                                            //   padding: EdgeInsets.symmetric(horizontal: 1),
-                                            //   child:
-                                            //   ),
-                                            // ),
 
 
                                             SizedBox(height: 150),
-                                            // Padding(
-                                            //   padding: EdgeInsets.symmetric(horizontal: 10),
-                                            //   child: Divider(
-                                            //     color: Colors.black26,
-                                            //     thickness: 2,
-                                            //   ),
-                                            // ),
-                                            //BGIMAGE
-                                            // Container(
-                                            //   height: 600,
-                                            //   margin: new EdgeInsets.only(
-                                            //     top: 5,
-                                            //     left: 0,
-                                            //     right: 0,
-                                            //   ),
-                                            //   // padding: EdgeInsets.symmetric(
-                                            //   //     vertical: 20,
-                                            //   //     horizontal: 20),
-                                            //   decoration: BoxDecoration(
-                                            //
-                                            //     borderRadius: new BorderRadius.only(
-                                            //       topLeft: const Radius.circular(
-                                            //           10),
-                                            //       topRight: const Radius.circular(
-                                            //           7),
-                                            //     ),
-                                            //     // color: Color(0xff055475),
-                                            //     image: DecorationImage(
-                                            //       image: AssetImage(
-                                            //           "assets/images/background2.png"),
-                                            //       fit: BoxFit.fill,
-                                            //
-                                            //     ),
-                                            //   ),
-                                            //   // child: Image(
-                                            //   //     image: AssetImage("assets/images/background2.png"),
-                                            //   //     fit: BoxFit.cover
-                                            //   // ),
-                                            // ),
+
 
                                           ],
                                         ),
@@ -1275,12 +1232,41 @@ class NegocioPageState extends State<NegocioPage> {
                                                   snapshots(),
                                                   builder: (context, snapshot1) {
                                                     int idx = 0;
+                                                    var useroferta = snapoferta.data;
                                                     var oferta = snapshot1.data;
-                                                    bool isfav = false;
-                                                    
-                                                    
 
 
+
+
+
+                                                    for(int k = 0;k<ofertaData.length;k++){
+                                                      if(ofertaData[k]["estado"]=="activo"){
+                                                        for(int m=0;m<useroferta.size;m++){
+
+                                                          if(useroferta.docs[m]["ofertaID"]==ofertaData[k]["id"]){
+
+                                                            if((useroferta.docs[m]["limite"]==0)||(useroferta.docs[m]["estado"]==false)){
+
+                                                              ofertaData.removeAt(k);
+
+                                                            }
+                                                          }
+
+                                                        }
+                                                      }else{
+                                                        for(int m=0;m<useroferta.size;m++) {
+                                                          if (useroferta.docs[m]["ofertaID"] == ofertaData[k]["id"]) {
+                                                            DatabaseConnect(uid: user.uid).likeOferta(useroferta.docs[m]["ofertaID"],true,false,false,useroferta.docs[m]["limite"],useroferta.docs[m]["urlImage"],useroferta.docs[m]["nombre"],useroferta.docs[m]["valor"],useroferta.docs[m]["idEmpresa"]);
+                                                          }
+                                                        }
+
+                                                        ofertaData.removeAt(k);
+                                                      }
+
+
+
+
+                                                    }
 
 
 
@@ -1288,15 +1274,16 @@ class NegocioPageState extends State<NegocioPage> {
                                                     return SizedBox(
                                                       height: 200,
                                                       child: InfinityPageView(
-                                                          itemCount: snapshot1.data.docs.length,
+                                                          itemCount: ofertaData.length,
                                                           controller: _pageController,
                                                           onPageChanged: (
                                                               int index) =>
                                                               setState(() =>
                                                               idx = index),
                                                           itemBuilder: (_, i) {
-                                                            for (int j = 0; j < snapoferta.data.size; j++) {
-                                                              if (snapoferta.data.docs[j]["ofertaID"] == oferta.docs[i].id) {
+                                                            bool isfav = false;
+                                                            for (int j = 0; j < useroferta.size; j++) {
+                                                              if (useroferta.docs[j]["ofertaID"] == ofertaData[i]["id"]) {
                                                                 isfav = true;
                                                                 changeIconFav();
                                                               }
@@ -1321,7 +1308,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                     // height: 50,
                                                                     padding: EdgeInsets
                                                                         .symmetric(
-                                                                        vertical: 20),
+                                                                        vertical: 0),
                                                                     alignment: Alignment
                                                                         .center,
                                                                     decoration: BoxDecoration(
@@ -1337,7 +1324,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                       //       spreadRadius: 2)
                                                                       // ],
                                                                       // border: Border.all(color: Colors.grey, width: 2),
-                                                                      image: imagePick(oferta.docs[i]["urlImage"]),
+                                                                      image: imagePick(ofertaData[i]["urlImage"]),
 
                                                                     ),
                                                                     //     child: Stack(
@@ -1404,9 +1391,51 @@ class NegocioPageState extends State<NegocioPage> {
                                                                     //
                                                                     // ),
                                                                     child: Stack(
-                                                                      children: <Widget>[
+                                                                      children: <Widget>[Container(
+                                                                          padding: EdgeInsets.symmetric(horizontal: 20),
+                                                                          child: Align(
+                                                                            alignment: Alignment.topRight,
+                                                                            child: Stack(
+                                                                              children: <Widget>[
+                                                                                // Stroked text as border.
+                                                                                Text(
+                                                                                  ofertaData[i]["nombre"],
+                                                                                  style: GoogleFonts.oswald(
+                                                                                    foreground:  Paint()
+                                                                                      ..style = PaintingStyle.stroke
+                                                                                      ..strokeWidth = 2
+                                                                                      ..color = Colors.black54,
+                                                                                    textStyle: Theme.of(context).textTheme.headline4,
+                                                                                    fontSize: 25,
+                                                                                    fontWeight: FontWeight.w700,
+
+                                                                                  ),
+                                                                                  // textAlign: TextAlign.center,
+                                                                                ),
+                                                                                // Solid text as fill.
+                                                                                Text(
+                                                                                  ofertaData[i]["nombre"],
+                                                                                  style: GoogleFonts.oswald(
+                                                                                    shadows: <Shadow>[
+                                                                                      Shadow(
+                                                                                        offset: Offset(3.5, 3.5),
+                                                                                        blurRadius: 3.0,
+                                                                                        color: Color.fromARGB(255, 0, 0, 0),
+                                                                                      ),
+                                                                                    ],
+                                                                                    textStyle: Theme.of(context).textTheme.headline4,
+                                                                                    fontSize: 25,
+                                                                                    fontWeight: FontWeight.w700,
+                                                                                    color: Colors.white.withOpacity(0.9),
+                                                                                  ),
+                                                                                  // textAlign: TextAlign.center,
+                                                                                ),
+                                                                              ],
+                                                                            )
+                                                                          )
+                                                                      ),
                                                                         Container(
-                                                                          padding: EdgeInsets.symmetric(horizontal: 5),
+                                                                          padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                                                                           child: Align(
                                                                             alignment: Alignment.bottomLeft,
 
@@ -1414,6 +1443,13 @@ class NegocioPageState extends State<NegocioPage> {
                                                                               height: 45,
                                                                               width: 45,
                                                                               decoration: BoxDecoration(
+                                                                                boxShadow: <BoxShadow>[
+                                                                                  BoxShadow(
+                                                                                      color: Colors.black54,
+                                                                                      offset: Offset(0, 0),
+                                                                                      blurRadius: 4,
+                                                                                      spreadRadius: 1)
+                                                                                ],
                                                                                 borderRadius: BorderRadius
                                                                                     .all(Radius
                                                                                     .circular(12)),
@@ -1432,8 +1468,8 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                           bool vote = false;
                                                                                           setState(() {
                                                                                             isfav = false;
-                                                                                            FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('ofertas').doc(oferta.docs[i].id).delete();
-                                                                                            BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
+                                                                                            FirebaseFirestore.instance.collection('usuario').doc(user.uid).collection('ofertas').doc(ofertaData[i]["id"]).delete();
+                                                                                            BusinessDatabaseConnect().likeOferta(pageid, ofertaData[i]["id"], vote);
                                                                                           });
 
                                                                                         }else{
@@ -1441,12 +1477,12 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                           setState(() {
 
                                                                                             isfav = true;
-                                                                                            DatabaseConnect(uid: user.uid).likeOferta(oferta.docs[i].id,isfav,true,false,oferta.docs[i]["limite"]);
-                                                                                            BusinessDatabaseConnect().likeOferta(pageid, oferta.docs[i].id, vote);
+                                                                                            DatabaseConnect(uid: user.uid).likeOferta(ofertaData[i]["id"],isfav,true,false,ofertaData[i]["limiteUsuario"],ofertaData[i]["urlImage"],ofertaData[i]["nombre"],ofertaData[i]["valor"]+0.0,ofertaData[i]["pageid"]);
+                                                                                            BusinessDatabaseConnect().likeOferta(pageid, ofertaData[i]["id"], vote);
                                                                                             ScaffoldMessenger.of(context)
                                                                                                 .showSnackBar(SnackBar(
                                                                                                 content: Text(
-                                                                                                    'Te gusta ${oferta.docs[i]["nombre"]}')));
+                                                                                                    'Te gusta ${ofertaData[i]["nombre"]}')));
                                                                                           });
                                                                                         }
 
@@ -1495,7 +1531,7 @@ class NegocioPageState extends State<NegocioPage> {
 
                                                                             children: <Widget>[
                                                                               Container(
-                                                                                  width: 200,
+                                                                                  width: 150,
                                                                                   // height: 200,
                                                                                   child: InkWell(
                                                                                     onTap: (){
@@ -1514,7 +1550,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                                     width: 130,
                                                                                                     height: 130,
                                                                                                     child: QrImage(
-                                                                                                      data: oferta.docs[i].id,
+                                                                                                      data: ofertaData[i]["id"],
                                                                                                       size: MediaQuery
                                                                                                           .of(context)
                                                                                                           .size
@@ -1534,7 +1570,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                                             height: 40,
                                                                                                             // width: 200,
                                                                                                             child: Text(
-                                                                                                              oferta.docs[i]["nombre"],
+                                                                                                              ofertaData[i]["nombre"],
                                                                                                               style: TextStyle(
                                                                                                                   fontSize: 15,
                                                                                                                   color: Colors
@@ -1545,7 +1581,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                                             height: 40,
                                                                                                             // width: 200,
                                                                                                             child: Text(
-                                                                                                              "GTQ ${oferta.docs[i]["valor"]}",
+                                                                                                              "GTQ ${ofertaData[i]["valor"]}",
                                                                                                               style: TextStyle(
                                                                                                                   fontSize: 15,
                                                                                                                   color: Colors
@@ -1570,10 +1606,14 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                                 TextButton(
                                                                                                   onPressed: () {
                                                                                                     bool vote = true;
+                                                                                                    DatabaseConnect(
+                                                                                                        uid: user.uid)
+                                                                                                        .likeOferta(
+                                                                                                        ofertaData[i]["id"],isfav,true,true,ofertaData[i]["limiteUsuario"],ofertaData[i]["urlImage"],ofertaData[i]["nombre"],ofertaData[i]["valor"],ofertaData[i]["pageid"]);
                                                                                                     BusinessDatabaseConnect()
                                                                                                         .useOferta(
                                                                                                         pageid,
-                                                                                                        oferta.docs[i].id,
+                                                                                                        ofertaData[i]["id"],
                                                                                                         vote);
                                                                                                     Navigator.pop(
                                                                                                         context);
@@ -1587,7 +1627,7 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                       );
                                                                                     },
                                                                                     child: QrImage(
-                                                                                      data: oferta.docs[i].id,
+                                                                                      data: ofertaData[i]["id"],
                                                                                       size: MediaQuery
                                                                                           .of(context)
                                                                                           .size
@@ -1599,29 +1639,49 @@ class NegocioPageState extends State<NegocioPage> {
                                                                                 //   size: MediaQuery.of(context).size.height,
                                                                                 // ),
                                                                               ),
-                                                                              SizedBox(
-                                                                                width: 30,
-                                                                              ),
+                                                                              // SizedBox(
+                                                                              //   width: 30,
+                                                                              // ),
                                                                               Column(
                                                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                                                   crossAxisAlignment: CrossAxisAlignment.end,
                                                                                   children: <Widget>[
-                                                                                    Text(
-                                                                                      oferta.docs[i]["nombre"],
-                                                                                      style: TextStyle(
-                                                                                          fontSize: 20,
-                                                                                          color: Colors
-                                                                                              .black54),
+                                                                                    SizedBox(
+                                                                                      height: 40,
+                                                                                      width: 200,
+                                                                                      child: Card(
+                                                                                        color: Color(0xff87b3ed),
+                                                                                        elevation: 10,
+                                                                                        child: Text(
+                                                                                          ofertaData[i]["nombre"],
+                                                                                          textAlign: TextAlign.center,
+                                                                                          style: TextStyle(
+                                                                                              fontSize: 20,
+                                                                                              color: Colors
+                                                                                                  .black54),
+                                                                                        ),
+                                                                                      ),
                                                                                     ),
+
+
                                                                                     SizedBox(
                                                                                       height: 20,
                                                                                     ),
-                                                                                    Text(
-                                                                                      "GTQ ${oferta.docs[i]["valor"]}",
-                                                                                      style: TextStyle(
-                                                                                          fontSize: 20,
-                                                                                          color: Colors
-                                                                                              .black54),
+                                                                                    SizedBox(
+                                                                                      height: 40,
+                                                                                      width: 200,
+                                                                                      child: Card(
+                                                                                        color: Color(0xff87b3ed),
+                                                                                        elevation: 10,
+                                                                                        child: Text(
+                                                                                          "GTQ ${ofertaData[i]["valor"]}",
+                                                                                          textAlign: TextAlign.center,
+                                                                                          style: TextStyle(
+                                                                                              fontSize: 20,
+                                                                                              color: Colors
+                                                                                                  .black54),
+                                                                                        ),
+                                                                                      ),
                                                                                     ),
                                                                                   ]
                                                                               ),

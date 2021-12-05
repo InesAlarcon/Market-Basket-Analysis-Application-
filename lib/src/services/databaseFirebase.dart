@@ -180,7 +180,7 @@ class DatabaseConnect {
   }
 
 
-  Future likeOferta(String id, bool like, bool estado, bool used, int limit) async {
+  Future likeOferta(String id, bool like, bool estado, bool used, int limit, String img, String name, double val,String pageid) async {
     final ref = FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id);
     // var query= await FirebaseFirestore.instanceFor(app: clientApp).collection('usuario').doc(uid).collection('ofertas').doc(id).get();
 
@@ -222,6 +222,10 @@ class DatabaseConnect {
             'ofertaID': id,
             'estado': estado,
             'limite': limit-1,
+            'urlImage': img,
+            'nombre': name,
+            'valor': val,
+            'idEmpresa': pageid,
           })
         }else{
           ret = ref.set({
@@ -229,6 +233,10 @@ class DatabaseConnect {
             'ofertaID': id,
             'estado': estado,
             'limite': limit,
+            'urlImage': img,
+            'nombre': name,
+            'valor': val,
+            'idEmpresa': pageid,
           })
         }
 

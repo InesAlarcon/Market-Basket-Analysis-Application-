@@ -111,8 +111,8 @@ class SearchMenuTestState extends State<SearchMenuTest> {
 
     return new Scaffold(
         appBar: new AppBar(
-          title: Text('Empresas'),
-          backgroundColor: Color(0xff108aa6),
+          title: Text('Buscar Negocios'),
+          backgroundColor: Color(0xff2C73D2),
 
         ),
         body:Stack(
@@ -165,21 +165,21 @@ class SearchMenuTestState extends State<SearchMenuTest> {
                             child: Container(
                               height: 50,
                                 child: ListTile(
-                                  leading: IconButton(
-                                    onPressed: (){
-                                      final int vote = element["voteCount"]+1;
-                                      // final double num = element['defaultRating']+.0;
-                                      // BusinessDatabaseConnect().voteEmpresa(, vote);
-                                      DatabaseConnect(uid: user.uid).agregarSuscripcion(element['nombre'], num, vote, element['id']);
-                                      setState(() {
-                                        // changeIcon();
-
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(content: Text('Suscrito a ${element['nombre']}')));
-                                    },
-                                      icon: subscribeIcon,
-                                    ),
+                                  // leading: IconButton(
+                                  //   onPressed: (){
+                                  //     final int vote = element["voteCount"]+1;
+                                  //     // final double num = element['defaultRating']+.0;
+                                  //     // BusinessDatabaseConnect().voteEmpresa(, vote);
+                                  //     DatabaseConnect(uid: user.uid).agregarSuscripcion(element['nombre'], num, vote, element['id']);
+                                  //     setState(() {
+                                  //       // changeIcon();
+                                  //
+                                  //     });
+                                  //     ScaffoldMessenger.of(context)
+                                  //         .showSnackBar(SnackBar(content: Text('Suscrito a ${element['nombre']}')));
+                                  //   },
+                                  //     icon: subscribeIcon,
+                                  //   ),
                                     title: Text(element['nombre'],
                                       textAlign: TextAlign.center,
                                       style: TextStyle(

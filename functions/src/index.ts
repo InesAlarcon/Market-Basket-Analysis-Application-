@@ -62,7 +62,7 @@ export const sendToDevice = functions.firestore
         const order = snapshot.data();
         const docId = snapshot.id;
 
-
+        let cant = ``;
 
 
         // const querySnapshot = await db
@@ -72,11 +72,13 @@ export const sendToDevice = functions.firestore
         //     .get();
         //
         // const tokens = querySnapshot.docs.map(snap => snap.id);
-
+        if (order.limiteUsuario<10){
+            cant = `\nSolo ${order.limiteUsuario} ofertas disponibles! Aprovecha ahora.`;
+        }
         const payload: admin.messaging.MessagingPayload = {
             notification: {
                 title: 'Nueva oferta!',
-                body: `Oferta ${order.nombre} a solo GTQ ${order.valor}`,
+                body: `Oferta ${order.nombre} a solo GTQ ${order.valor} ${cant}`,
                 icon: 'your-icon-url',
                 // image: order.urlImage,
                 click_action: 'FLUTTER_NOTIFICATION_CLICK'

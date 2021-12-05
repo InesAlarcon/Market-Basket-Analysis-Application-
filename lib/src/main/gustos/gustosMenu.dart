@@ -90,10 +90,11 @@ class GustosMenuState extends State<GustosMenu> {
 
     showDialog(
         context: context,
-        barrierDismissible: false,
+        // barrierDismissible: true,
         builder: (context)
         {
           return AlertDialog(
+
               backgroundColor: Colors.transparent,
               insetPadding: EdgeInsets.all(10),
               content: Stack(
@@ -113,12 +114,12 @@ class GustosMenuState extends State<GustosMenu> {
                         height: 200,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(5),
-                          border: Border.all(color: Color(0xff108aa6), width: 1.8),
-                          color: Color(0xefdae3f7),
+                          border: Border.all(color: Color(0xff2C73D2), width: 1.8),
+                          color: Color(0x7f2C73D2),
                         ),
                         items: items,
-                        title: Text("Seleccionar 3 gustos iniciales :", style:TextStyle(color: Colors.white, fontSize: 20),),
-                        headerColor: Color(0xff108aa6),
+                        title: Text("Seleccionar gustos :", style:TextStyle(color: Colors.white, fontSize: 20),),
+                        headerColor: Color(0xff2C73D2),
                         textStyle: GoogleFonts.montserrat(textStyle: TextStyle(color: Colors.white)),
                         chipColor: Color(0xff6c80a3),
                         chipShape: RoundedRectangleBorder(
@@ -158,15 +159,16 @@ class GustosMenuState extends State<GustosMenu> {
                               selectGustos=true;
                             }
                           }
-                          if(selectedTags.length<1){
-                            selectGustos = false;
-                              ScaffoldMessenger
-                                  .of(context)
-                                  .showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Seleccionar por lo menos 1 gusto')));
-                          }else if(selectedTags.length>=1&&selectGustos){
+                          // if(selectedTags.length<1){
+                          //   selectGustos = false;
+                          //     ScaffoldMessenger
+                          //         .of(context)
+                          //         .showSnackBar(
+                          //         SnackBar(
+                          //             content: Text(
+                          //                 'Seleccionar por lo menos 1 gusto')));
+                          // }else
+                            if(selectedTags.length>=1){
                               selectedTags.forEach((element) {
                                 DatabaseConnect(uid: user).agregarGustos(element);
                               });
@@ -297,29 +299,30 @@ class GustosMenuState extends State<GustosMenu> {
 
       appBar: AppBar(
         title: Text('Gustos'),
-        backgroundColor: Color(0xff108aa6),
+        backgroundColor: Color(0xff2C73D2),
           actions: <Widget>[
           IconButton(
           onPressed: () async {
-            Navigator.push(
-                context, PageRouteBuilder(
-                opaque: false,
-                pageBuilder: (context,animation,secondaryAnimation) => GustoTile(uid: user.uid,list: finalTagList,totalGustos: totalGustos,),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.ease;
-
-                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                }
-                )
-              );
+            showAlert(context, user.uid);
+            // Navigator.push(
+            //     context, PageRouteBuilder(
+            //     opaque: false,
+            //     pageBuilder: (context,animation,secondaryAnimation) => GustoTile(uid: user.uid,list: finalTagList,totalGustos: totalGustos,),
+            //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            //       const begin = Offset(0.0, 1.0);
+            //       const end = Offset.zero;
+            //       const curve = Curves.ease;
+            //
+            //       var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            //
+            //
+            //       return SlideTransition(
+            //         position: animation.drive(tween),
+            //         child: child,
+            //       );
+            //     }
+            //     )
+            //   );
             },
           icon: Icon(Icons.search)),
           ]
@@ -330,7 +333,24 @@ class GustosMenuState extends State<GustosMenu> {
         var gustos = snapshot2.data;
         
         var listaGusto = gustos.docs.map((e) => e.get("gusto")).toList();
-        
+
+        if(listaGusto.isEmpty){
+          return Stack(
+            children: <Widget>[
+              background(),
+              Center(
+                child: ElevatedButton(
+                  onPressed: (){
+                    showAlert(context, user.uid);
+                  },
+                  child: Text("Agregar Nuevos Gustos"),
+                ),
+              ),
+            ]
+
+
+          );
+        }
           
         return  Stack(
             children: <Widget> [

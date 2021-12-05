@@ -107,12 +107,12 @@ class GustoTileState extends State<GustoTile> {
                       height: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: Color(0xff108aa6), width: 1.8),
-                        color: Color(0xefdae3f7),
+                        border: Border.all(color: Color(0xff2C73D2), width: 1.8),
+                        color: Color(0x8f2C73D2),
                       ),
                       items: items,
                       title: Text("Seleccionar 3 gustos iniciales :", style:TextStyle(color: Colors.white, fontSize: 20),),
-                      headerColor: Color(0xff108aa6),
+                      headerColor: Color(0xff2C73D2),
                       textStyle: GoogleFonts.montserrat(textStyle: TextStyle(color: Colors.white)),
                       chipColor: Color(0xff6c80a3),
                       chipShape: RoundedRectangleBorder(
@@ -155,15 +155,16 @@ class GustoTileState extends State<GustoTile> {
                         //       selectGustos=true;
                         //     }
                         //   }
-                        if(selectedTags.length<1){
-                          selectGustos = false;
-                          ScaffoldMessenger
-                              .of(context)
-                              .showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      'Seleccionar por lo menos 1 gusto')));
-                        }else if(selectedTags.length>=1){
+                        // if(selectedTags.length<1){
+                        //   selectGustos = false;
+                        //   ScaffoldMessenger
+                        //       .of(context)
+                        //       .showSnackBar(
+                        //       SnackBar(
+                        //           content: Text(
+                        //               'Seleccionar por lo menos 1 gusto')));
+                        // }else
+                          if(selectedTags.length>=1){
                           selectedTags.forEach((element) {
                             DatabaseConnect(uid: user).agregarGustos(element);
                           });

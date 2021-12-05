@@ -594,7 +594,10 @@ class SuscripcionMenuState extends State<SuscripcionMenu> {
 
 
                                       },
-                                      background: Container(color: Colors.red),
+                                      background: Container(
+                                          color: Colors.red,
+                                        margin: EdgeInsets.symmetric(vertical: 10),
+                                      ),
                                       child: new Container(
                                         height: 100,
                                         decoration: BoxDecoration(
