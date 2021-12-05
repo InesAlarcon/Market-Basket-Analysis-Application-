@@ -125,6 +125,7 @@ class MainMenuState extends State<MainMenu> with TickerProviderStateMixin{
       }
 
 
+
       _pageController.animateToPage(
         _currentPage,
         duration: Duration(milliseconds: 350),
